@@ -6,6 +6,7 @@
 <title>Easy Money App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
+/* === Переменные цветов === */
 :root {
   --gold: #f3e5ab;
   --glass: rgba(0,0,0,0.6);
@@ -13,6 +14,7 @@
   --btn-dark: rgba(0,0,0,0.5);
 }
 
+/* === Базовые стили === */
 body{
   margin:0;
   font-family:'Arial Black',sans-serif;
@@ -24,6 +26,7 @@ body{
   overflow:hidden;
 }
 
+/* === Шапка с балансом === */
 .header{
   display:flex;
   justify-content:flex-end;
@@ -52,6 +55,7 @@ body{
   cursor:pointer;
 }
 
+/* === Заголовок приложения === */
 .app-title{
   text-align:center;
   font-size:44px;
@@ -62,6 +66,7 @@ body{
   letter-spacing:-2px;
 }
 
+/* === Основная область контента === */
 .main-container{
   flex:1;
   padding:0 25px;
@@ -69,6 +74,7 @@ body{
   padding-bottom:160px;
 }
 
+/* === Карточки и кнопки === */
 .glass-card{
   background:var(--glass);
   backdrop-filter:blur(20px);
@@ -94,6 +100,18 @@ body{
   border:2px solid var(--gold);
 }
 
+.action-btn{
+  padding:14px 22px;
+  border:none;
+  border-radius:18px;
+  background:var(--btn-dark);
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:12px;
+}
+
+/* === Нижнее меню === */
 .bottom-dock{
   position:fixed;
   bottom:-5px;
@@ -129,40 +147,35 @@ body{
   transition:.3s;
   background:var(--btn-dark);
 }
-
-.action-btn{
-  padding:14px 22px;
-  border:none;
-  border-radius:18px;
-  background:var(--btn-dark);
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:12px;
-}
-
 </style>
 </head>
 <body>
+
+<!-- === Шапка с балансом === -->
 <div class="header">
   <div class="header-balance">Баланс: <span id="top-balance">0</span>₽</div>
 </div>
 
+<!-- === Заголовок === -->
 <div class="app-title">Easy Money</div>
 
+<!-- === Основная область === -->
 <div class="main-container">
 
-  <!-- EARN -->
+  <!-- === Раздел: Заработать (Earn) === -->
   <div id="earn" class="page active">
+    <!-- Приглашение друзей -->
     <div class="glass-card">
       <h2 style="color:var(--gold)">Приглашение друзей</h2>
       <p>1 друг = <b>10₽</b> + 200 энергии</p>
       <button class="action-btn" onclick="copyRef()">Скопировать ссылку</button>
     </div>
+    <!-- Выполнение заданий -->
     <div class="glass-card">
       <h2 style="color:var(--gold)">Выполнение заданий</h2>
       <div id="tasks-list"></div>
     </div>
+    <!-- Клики -->
     <div class="glass-card">
       <h2 style="color:var(--gold)">Клики</h2>
       <div>Энергия: <span id="energy">1000</span>/1000</div>
@@ -170,7 +183,7 @@ body{
     </div>
   </div>
 
-  <!-- PROFILE -->
+  <!-- === Раздел: Профиль (Profile) === -->
   <div id="profile" class="page">
     <div class="glass-card">
       <img id="user-avatar" class="avatar" src="https://via.placeholder.com/80" alt="Ava">
@@ -181,7 +194,7 @@ body{
     </div>
   </div>
 
-  <!-- INFO -->
+  <!-- === Раздел: Информация (Info) === -->
   <div id="info" class="page">
     <div class="glass-card">
       <h2 style="color:var(--gold)">Информация</h2>
@@ -191,7 +204,7 @@ body{
     </div>
   </div>
 
-  <!-- ADMIN (скрыто, только для твоего ID) -->
+  <!-- === Раздел: Админка (Admin, только для твоего ID) === -->
   <div id="admin" class="page">
     <div class="glass-card">
       <h2 style="color:var(--gold)">Админка</h2>
@@ -201,6 +214,7 @@ body{
 
 </div>
 
+<!-- === Нижнее меню навигации === -->
 <div class="bottom-dock">
   <div class="nav-container">
     <div class="nav-item active" id="nav-earn" onclick="showPage('earn')">💰</div>
@@ -220,12 +234,13 @@ const adminID = 7020322752;
 const userID = tg.initDataUnsafe?.user?.id || 0;
 const historyLog = document.getElementById('history-log');
 
+// Установка имени и аватара пользователя
 if(tg.initDataUnsafe?.user){
   document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
   if(tg.initDataUnsafe.user.photo_url) document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url;
 }
 
-// Show admin button only for adminID
+// Кнопка админа видна только для adminID
 if(userID == adminID){
   document.getElementById('nav-admin').style.display='flex';
   const adminBtnContainer = document.getElementById('admin-btn-container');
@@ -236,6 +251,7 @@ if(userID == adminID){
   adminBtnContainer.appendChild(btn);
 }
 
+// === Функции навигации ===
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -244,12 +260,14 @@ function showPage(id){
   if(navId) navId.classList.add('active');
 }
 
+// === История начислений ===
 function addHistory(reason, amount){
   const item = document.createElement('div');
   item.innerHTML = `<span>${reason}</span> <span style="color:var(--gold)">+${amount}</span>`;
   historyLog.prepend(item);
 }
 
+// === Начисление денег ===
 function addMoney(amount, reason){
   balance += amount;
   document.getElementById('top-balance').innerText = balance;
@@ -257,6 +275,7 @@ function addMoney(amount, reason){
   addHistory(reason, amount);
 }
 
+// === Клики по монете ===
 function tap(){
   if(energy<=0){alert('Энергия закончилась'); return;}
   energy--;
@@ -267,13 +286,14 @@ function tap(){
   addHistory("Клик",0.005);
 }
 
+// === Приглашение друзей ===
 function copyRef(){
   const ref = `https://t.me/DifferentEarningsBot?start=${userID}`;
   navigator.clipboard.writeText(ref);
   alert("Ссылка скопирована");
 }
 
-// ADMIN FUNCTIONS
+// === Админка ===
 const adminTasks = document.getElementById('admin-tasks');
 let tasks = [];
 
@@ -303,7 +323,6 @@ function renderTasks(){
     adminTasks.appendChild(div);
   });
 }
-
 </script>
 </body>
 </html>
