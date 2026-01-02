@@ -12,13 +12,15 @@
             --border: rgba(255, 255, 255, 0.15);
             --btn-border: #ffffff;
             --btn-hover: #f3e5ab;
+            --btn-bg: black;
+            --neon-glow: 0 0 10px #ffffff, 0 0 15px #ffffff;
         }
 
         body {
             margin: 0;
             padding: 0;
             font-family: 'Arial Black', sans-serif;
-            background: radial-gradient(circle at center, #1b3d2f 0%, #000 100%);
+            background: linear-gradient(to bottom, #ff7e5f, #feb47b); /* Красочные градиенты */
             color: white;
             height: 100vh;
             display: flex;
@@ -40,6 +42,17 @@
             text-transform: uppercase;
             letter-spacing: -2px;
             text-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);
+        }
+
+        .balance {
+            margin-left: auto;
+            padding: 8px 16px;
+            background: var(--glass);
+            border-radius: 12px;
+            font-weight: bold;
+            color: var(--gold);
+            text-align: center;
+            border: 1px solid var(--border);
         }
 
         .main-container {
@@ -65,17 +78,18 @@
             padding: 14px 24px;
             border: 2px solid var(--btn-border);
             border-radius: 18px;
-            background: transparent;
+            background: var(--btn-bg);
             color: var(--gold);
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
             margin-top: 12px;
+            box-shadow: var(--neon-glow);
         }
 
         .action-btn:hover {
             background-color: var(--btn-hover);
-            box-shadow: 0 0 10px var(--btn-border), 0 0 15px var(--btn-border);
+            box-shadow: var(--neon-glow);
         }
 
         .bottom-dock {
@@ -111,11 +125,13 @@
             cursor: pointer;
             font-weight: bold;
             transition: 0.3s;
-            background: var(--btn-border);
+            background: var(--btn-bg);
+            box-shadow: var(--neon-glow);
         }
 
         .nav-item:hover {
             background: var(--btn-hover);
+            box-shadow: var(--neon-glow);
         }
 
     </style>
@@ -123,26 +139,24 @@
 <body>
     <div class="header">
         <div class="app-title">Easy Money</div>
+        <div class="balance" id="top-balance">Баланс: 0₽</div>
     </div>
 
     <div class="main-container">
 
-        <!-- EARN -->
+        <!-- Разделы заработка -->
         <div class="glass-card">
-            <h2 style="color: var(--gold)">Приглашение друзей</h2>
-            <p>1 друг = <b>10₽</b> + 200 энергии</p>
-            <button class="action-btn">Скопировать ссылку</button>
+            <h2 style="color: var(--gold)">Заработок на рефералах</h2>
+            <button class="action-btn">Перейти к рефералам</button>
         </div>
 
         <div class="glass-card">
-            <h2 style="color: var(--gold)">Выполнение заданий</h2>
-            <p>Выполняйте задания и зарабатывайте деньги!</p>
+            <h2 style="color: var(--gold)">Заработок на выполнение заданий</h2>
             <button class="action-btn">Перейти к заданиям</button>
         </div>
 
         <div class="glass-card">
-            <h2 style="color: var(--gold)">Клики</h2>
-            <p>Кликайте по монетам и зарабатывайте деньги!</p>
+            <h2 style="color: var(--gold)">Заработок на кликах</h2>
             <button class="action-btn">Начать кликать</button>
         </div>
 
