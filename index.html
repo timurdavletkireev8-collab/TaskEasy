@@ -6,19 +6,18 @@
 <title>Easy Money App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* === Переменные цветов === */
 :root {
   --gold: #f3e5ab;
-  --glass: rgba(0,0,0,0.6);
-  --border: rgba(255,255,255,0.15);
-  --btn-dark: rgba(0,0,0,0.5);
+  --glass: rgba(0,0,0,0.3);
+  --border: rgba(255,255,255,0.3);
+  --btn-dark: rgba(0,0,0,0.7);
+  --blue-dark: #0f2a45;
+  --blue-light: #1a3f6d;
 }
-
-/* === Базовые стили === */
 body{
   margin:0;
   font-family:'Arial Black',sans-serif;
-  background: radial-gradient(circle at center,#1b3d2f 0%,#000 100%);
+  background: linear-gradient(to bottom,#1a3f6d,#0f2a45);
   color:white;
   height:100vh;
   display:flex;
@@ -26,195 +25,166 @@ body{
   overflow:hidden;
 }
 
-/* === Шапка с балансом === */
+/* HEADER */
 .header{
   display:flex;
-  justify-content:flex-end;
-  padding:20px;
-  gap:12px;
-  z-index:10;
+  justify-content:flex-start;
+  padding:15px 20px;
+  font-weight:bold;
+  font-size:20px;
 }
 .header-balance{
+  margin-left:auto;
   background:var(--glass);
-  backdrop-filter:blur(10px);
   padding:8px 16px;
   border-radius:12px;
   border:1px solid var(--border);
-  font-weight:bold;
-  color:var(--gold);
-}
-.notif-btn{
-  background:var(--glass);
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
 }
 
-/* === Заголовок приложения === */
+/* TITLE */
 .app-title{
-  text-align:center;
-  font-size:44px;
-  color:var(--gold);
-  text-transform:uppercase;
-  text-shadow:0 4px 10px rgba(0,0,0,0.9);
-  margin-top:10px;
-  letter-spacing:-2px;
+  padding-left:20px;
+  font-size:28px;
+  font-weight:bold;
 }
 
-/* === Основная область контента === */
+/* MAIN CONTAINER */
 .main-container{
   flex:1;
-  padding:0 25px;
+  padding:10px 20px;
   overflow-y:auto;
-  padding-bottom:160px;
+  margin-bottom:125px; /* для нижнего меню */
 }
 
-/* === Карточки и кнопки === */
+/* GLASS CARD */
 .glass-card{
   background:var(--glass);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(15px);
   border-radius:15px;
-  padding:25px;
   border:1px solid var(--border);
-  box-shadow:0 10px 30px rgba(0,0,0,0.5);
-  text-align:center;
-  margin-bottom:15px;
+  padding:18px;
+  margin-bottom:12px;
 }
 
-.page{display:none;}
-.page.active{display:block;animation:fadeIn .3s;}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-
+/* AVATAR */
 .avatar{
   width:80px;
   height:80px;
   border-radius:15px;
-  background:#333;
-  margin-bottom:15px;
   border:2px solid var(--gold);
+  margin-bottom:10px;
 }
 
+/* PAGE */
+.page{display:none;}
+.page.active{display:block; animation:fadeIn .3s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* BUTTONS */
 .action-btn{
-  padding:14px 22px;
+  padding:12px 18px;
   border:none;
   border-radius:18px;
   background:var(--btn-dark);
   color:white;
   font-weight:bold;
   cursor:pointer;
-  margin-top:12px;
+  margin-top:8px;
+  border:1px solid white;
 }
 
-/* === Нижнее меню === */
+/* BOTTOM DOCK */
 .bottom-dock{
   position:fixed;
-  bottom:-5px;
+  bottom:0;
   left:0;
   width:100%;
   height:125px;
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(30px);
-  -webkit-backdrop-filter:blur(30px);
-  border-radius:50px 50px 0 0;
-  border-top:1px solid var(--border);
+  background:var(--blue-dark);
   display:flex;
   justify-content:center;
-  padding-top:25px;
-  z-index:100;
+  align-items:center;
+  border-radius:25px 25px 0 0;
 }
-
 .nav-container{
   display:flex;
   width:90%;
   justify-content:space-around;
 }
-
 .nav-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 22px;
+  padding:12px 20px;
   border-radius:35px;
-  color:white;
+  background:var(--btn-dark);
+  border:1px solid white;
   cursor:pointer;
   font-weight:bold;
-  transition:.3s;
-  background:var(--btn-dark);
+  transition:0.3s;
 }
+.nav-item.active{
+  background:white;
+  color:black;
+}
+
 </style>
 </head>
 <body>
-
-<!-- === Шапка с балансом === -->
 <div class="header">
+  Easy Money
   <div class="header-balance">Баланс: <span id="top-balance">0</span>₽</div>
 </div>
 
-<!-- === Заголовок === -->
-<div class="app-title">Easy Money</div>
-
-<!-- === Основная область === -->
 <div class="main-container">
 
-  <!-- === Раздел: Заработать (Earn) === -->
+  <!-- Заработок -->
   <div id="earn" class="page active">
-    <!-- Приглашение друзей -->
     <div class="glass-card">
-      <h2 style="color:var(--gold)">Приглашение друзей</h2>
+      <h3>Приглашение друзей</h3>
       <p>1 друг = <b>10₽</b> + 200 энергии</p>
       <button class="action-btn" onclick="copyRef()">Скопировать ссылку</button>
     </div>
-    <!-- Выполнение заданий -->
     <div class="glass-card">
-      <h2 style="color:var(--gold)">Выполнение заданий</h2>
+      <h3>Выполнение заданий</h3>
       <div id="tasks-list"></div>
     </div>
-    <!-- Клики -->
     <div class="glass-card">
-      <h2 style="color:var(--gold)">Клики</h2>
+      <h3>Клики</h3>
       <div>Энергия: <span id="energy">1000</span>/1000</div>
-      <div style="font-size:80px;cursor:pointer;margin-top:20px;" onclick="tap()">🪙</div>
+      <div style="font-size:70px;cursor:pointer;margin-top:10px;" onclick="tap()">🪙</div>
     </div>
   </div>
 
-  <!-- === Раздел: Профиль (Profile) === -->
+  <!-- Профиль -->
   <div id="profile" class="page">
     <div class="glass-card">
-      <img id="user-avatar" class="avatar" src="https://via.placeholder.com/80" alt="Ava">
-      <h2 id="user-name">User</h2>
+      <img id="user-avatar" class="avatar" src="https://via.placeholder.com/80" alt="Avatar">
+      <h3 id="user-name">User</h3>
       <p>Баланс: <span id="profile-balance">0</span>₽</p>
-      <h3 style="color:var(--gold)">История начислений</h3>
-      <div id="history-log" style="text-align:left;"></div>
+      <h4>История начислений</h4>
+      <div id="history-log"></div>
     </div>
   </div>
 
-  <!-- === Раздел: Информация (Info) === -->
+  <!-- Информация -->
   <div id="info" class="page">
     <div class="glass-card">
-      <h2 style="color:var(--gold)">Информация</h2>
+      <h3>Информация</h3>
       <button class="action-btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
       <button class="action-btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
       <div id="admin-btn-container"></div>
     </div>
   </div>
 
-  <!-- === Раздел: Админка (Admin, только для твоего ID) === -->
+  <!-- Админка -->
   <div id="admin" class="page">
     <div class="glass-card">
-      <h2 style="color:var(--gold)">Админка</h2>
+      <h3>Админка</h3>
       <div id="admin-tasks"></div>
+      <button class="action-btn" onclick="createTaskPrompt()">Создать задание</button>
     </div>
   </div>
 
 </div>
 
-<!-- === Нижнее меню навигации === -->
 <div class="bottom-dock">
   <div class="nav-container">
     <div class="nav-item active" id="nav-earn" onclick="showPage('earn')">💰</div>
@@ -233,14 +203,16 @@ let energy = 1000;
 const adminID = 7020322752;
 const userID = tg.initDataUnsafe?.user?.id || 0;
 const historyLog = document.getElementById('history-log');
+const adminTasks = document.getElementById('admin-tasks');
+let tasks = [];
 
-// Установка имени и аватара пользователя
+// Загрузка данных пользователя
 if(tg.initDataUnsafe?.user){
   document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
   if(tg.initDataUnsafe.user.photo_url) document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url;
 }
 
-// Кнопка админа видна только для adminID
+// Кнопка админа
 if(userID == adminID){
   document.getElementById('nav-admin').style.display='flex';
   const adminBtnContainer = document.getElementById('admin-btn-container');
@@ -251,7 +223,7 @@ if(userID == adminID){
   adminBtnContainer.appendChild(btn);
 }
 
-// === Функции навигации ===
+// Функции
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -260,61 +232,49 @@ function showPage(id){
   if(navId) navId.classList.add('active');
 }
 
-// === История начислений ===
 function addHistory(reason, amount){
   const item = document.createElement('div');
   item.innerHTML = `<span>${reason}</span> <span style="color:var(--gold)">+${amount}</span>`;
   historyLog.prepend(item);
 }
 
-// === Начисление денег ===
 function addMoney(amount, reason){
   balance += amount;
-  document.getElementById('top-balance').innerText = balance;
-  document.getElementById('profile-balance').innerText = balance;
+  document.getElementById('top-balance').innerText = balance.toFixed(2);
+  document.getElementById('profile-balance').innerText = balance.toFixed(2);
   addHistory(reason, amount);
 }
 
-// === Клики по монете ===
 function tap(){
   if(energy<=0){alert('Энергия закончилась'); return;}
   energy--;
-  balance += 0.005;
-  document.getElementById('top-balance').innerText = balance.toFixed(3);
-  document.getElementById('profile-balance').innerText = balance.toFixed(3);
+  addMoney(0.005,"Клик");
   document.getElementById('energy').innerText = energy;
-  addHistory("Клик",0.005);
 }
 
-// === Приглашение друзей ===
 function copyRef(){
   const ref = `https://t.me/DifferentEarningsBot?start=${userID}`;
   navigator.clipboard.writeText(ref);
   alert("Ссылка скопирована");
 }
 
-// === Админка ===
-const adminTasks = document.getElementById('admin-tasks');
-let tasks = [];
-
+// Админка
 function createTask(name, desc, link, price){
-  const task = {name,desc,link,price};
+  const task={name,desc,link,price};
   tasks.push(task);
   renderTasks();
 }
-
 function deleteTask(index){
   tasks.splice(index,1);
   renderTasks();
 }
-
 function renderTasks(){
   adminTasks.innerHTML="";
   tasks.forEach((t,i)=>{
     const div = document.createElement('div');
     div.className="glass-card";
     div.innerHTML=`
-      <h3>${t.name}</h3>
+      <h4>${t.name}</h4>
       <p>${t.desc}</p>
       <p>Цена: ${t.price}₽</p>
       <button class="action-btn" onclick="window.open('${t.link}','_blank')">Перейти</button>
@@ -323,6 +283,17 @@ function renderTasks(){
     adminTasks.appendChild(div);
   });
 }
+function createTaskPrompt(){
+  const name=prompt("Название задания:");
+  const desc=prompt("Описание:");
+  const link=prompt("Ссылка:");
+  const price=prompt("Цена:");
+  if(name && desc && link && price) createTask(name,desc,link,price);
+}
+
+// Пример задания
+tasks.push({name:"Тестовое задание",desc:"Описание тестового задания",link:"https://t.me/",price:5});
+renderTasks();
 </script>
 </body>
 </html>
