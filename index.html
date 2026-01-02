@@ -4,30 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Easy Money</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
-
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+*{box-sizing:border-box}
 
 body{
+  margin:0;
+  font-family:Arial Black, sans-serif;
   height:100vh;
-  font-family:'Montserrat',sans-serif;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
   color:white;
-  overflow:hidden;
-}
-
-.app{
-  height:100%;
+  background:
+    linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,.7)),
+    url("https://i.postimg.cc/R0XCH8F1/IMG-20260102-191417-881.jpg")
+    center/cover no-repeat;
   display:flex;
   flex-direction:column;
+  overflow:hidden;
 }
 
 /* HEADER */
@@ -35,22 +28,18 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:20px;
+  padding:15px 20px;
 }
-
 .title{
   font-size:42px;
   font-weight:900;
-  letter-spacing:2px;
 }
-
 .balance{
-  background:black;
-  padding:12px 18px;
-  border-radius:18px;
+  font-size:18px;
+  padding:8px 14px;
   border:2px solid white;
-  box-shadow:0 0 15px white;
-  font-size:16px;
+  border-radius:14px;
+  background:rgba(0,0,0,.6);
 }
 
 /* CONTENT */
@@ -59,140 +48,110 @@ body{
   padding:20px;
 }
 
-/* PAGES */
-.page{display:none;}
-.page.active{display:block;}
+.page{display:none}
+.page.active{display:block}
 
-/* UNIVERSAL BLACK CARD / BUTTON */
-.block{
-  background:black;
+/* BUTTONS */
+.big-btn{
+  width:100%;
+  padding:20px;
+  margin-bottom:15px;
+  background:rgba(0,0,0,.7);
   border:2px solid white;
-  box-shadow:0 0 18px rgba(255,255,255,0.9);
-  border-radius:22px;
-  padding:22px;
-  margin-bottom:20px;
-  text-align:center;
-  font-size:20px;
+  border-radius:18px;
+  color:white;
+  font-size:18px;
+  font-weight:700;
 }
 
 /* PROFILE */
-.profile{
-  text-align:center;
-}
-
-.profile img{
+.avatar{
   width:90px;
   height:90px;
   border-radius:20px;
   border:2px solid white;
-  box-shadow:0 0 15px white;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 
-.small{
-  font-size:14px;
-  opacity:0.85;
-}
-
-/* BOTTOM NAV */
+/* BOTTOM MENU */
 .bottom{
-  height:90px;
-  background:black;
-  border-top:2px solid white;
-  box-shadow:0 -5px 15px white;
+  height:80px;
   display:flex;
   justify-content:space-around;
   align-items:center;
+  background:rgba(0,0,0,.8);
 }
-
-.nav-btn{
-  width:60px;
-  height:60px;
-  background:black;
-  border:2px solid white;
-  box-shadow:0 0 15px white;
-  border-radius:18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
+.nav{
+  font-size:28px;
   cursor:pointer;
 }
-
-.nav-btn.active{
-  box-shadow:0 0 25px white;
-}
+.nav.active{opacity:1}
+.nav:not(.active){opacity:.5}
 </style>
 </head>
 
 <body>
-<div class="app">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="title">EASY MONEY</div>
-    <div class="balance">Баланс: 0₽</div>
-  </div>
+<div class="header">
+  <div class="title">EASY MONEY</div>
+  <div class="balance">Баланс: <span id="bal">0</span> ₽</div>
+</div>
 
-  <!-- CONTENT -->
-  <div class="content">
+<div class="content">
 
-    <!-- EARN -->
-    <div id="earn" class="page active">
-      <div class="block">Заработок на рефералах</div>
-      <div class="block">Заработок на выполнении заданий</div>
-      <div class="block">Заработок на кликах</div>
-    </div>
+<!-- EARN -->
+<div id="earn" class="page active">
+  <button class="big-btn">Заработок на рефералах</button>
+  <button class="big-btn">Заработок на заданиях</button>
+  <button class="big-btn">Заработок на кликах</button>
+</div>
 
-    <!-- PROFILE -->
-    <div id="profile" class="page">
-      <div class="block profile">
-        <img id="avatar" src="https://via.placeholder.com/90">
-        <div id="username">Пользователь</div>
-        <div class="small">ID: <span id="userid">0</span></div>
-      </div>
+<!-- PROFILE -->
+<div id="profile" class="page">
+  <img id="avatar" class="avatar" src="https://via.placeholder.com/90">
+  <div>ID: <span id="uid">—</span></div>
+  <br>
+  <div>Выполнено заданий: 0</div>
+  <div>Отклонено заданий: 0</div>
+  <br>
+  <button class="big-btn">История начислений</button>
+  <button class="big-btn">Задания на проверке</button>
+</div>
 
-      <div class="block">Выполнено заданий: 0</div>
-      <div class="block">Отклонено заданий: 0</div>
-      <div class="block">История начислений</div>
-      <div class="block">Задания на проверке</div>
-    </div>
+<!-- INFO -->
+<div id="info" class="page">
+  <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/news')">
+    Новостной канал
+  </button>
+  <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/support')">
+    Поддержка
+  </button>
+</div>
 
-    <!-- INFO -->
-    <div id="info" class="page">
-      <div class="block">Новостной канал</div>
-      <div class="block">Поддержка</div>
-    </div>
+</div>
 
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <div class="bottom">
-    <div class="nav-btn active" onclick="openPage('earn',this)">💰</div>
-    <div class="nav-btn" onclick="openPage('profile',this)">👤</div>
-    <div class="nav-btn" onclick="openPage('info',this)">ℹ️</div>
-  </div>
-
+<div class="bottom">
+  <div class="nav active" onclick="show('earn')">💰</div>
+  <div class="nav" onclick="show('profile')">👤</div>
+  <div class="nav" onclick="show('info')">ℹ️</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-function openPage(id,btn){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
 if(tg.initDataUnsafe?.user){
-  document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
-  document.getElementById('userid').innerText = tg.initDataUnsafe.user.id;
+  document.getElementById('uid').innerText = tg.initDataUnsafe.user.id;
   if(tg.initDataUnsafe.user.photo_url){
     document.getElementById('avatar').src = tg.initDataUnsafe.user.photo_url;
   }
+}
+
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
 }
 </script>
 
