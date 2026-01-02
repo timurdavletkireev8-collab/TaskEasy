@@ -134,6 +134,19 @@
             box-shadow: var(--neon-glow);
         }
 
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -145,37 +158,74 @@
     <div class="main-container">
 
         <!-- Разделы заработка -->
-        <div class="glass-card">
-            <h2 style="color: var(--gold)">Заработок на рефералах</h2>
-            <button class="action-btn">Перейти к рефералам</button>
+        <div id="earn" class="page active">
+            <div class="glass-card">
+                <h2 style="color: var(--gold)">Заработок на рефералах</h2>
+                <button class="action-btn">Перейти к рефералам</button>
+            </div>
+
+            <div class="glass-card">
+                <h2 style="color: var(--gold)">Заработок на выполнение заданий</h2>
+                <button class="action-btn">Перейти к заданиям</button>
+            </div>
+
+            <div class="glass-card">
+                <h2 style="color: var(--gold)">Заработок на кликах</h2>
+                <button class="action-btn">Начать кликать</button>
+            </div>
         </div>
 
-        <div class="glass-card">
-            <h2 style="color: var(--gold)">Заработок на выполнение заданий</h2>
-            <button class="action-btn">Перейти к заданиям</button>
+        <div id="profile" class="page">
+            <div class="glass-card">
+                <h2 style="color: var(--gold)">Профиль</h2>
+                <p>Здесь будет информация о профиле пользователя</p>
+            </div>
         </div>
 
-        <div class="glass-card">
-            <h2 style="color: var(--gold)">Заработок на кликах</h2>
-            <button class="action-btn">Начать кликать</button>
+        <div id="info" class="page">
+            <div class="glass-card">
+                <h2 style="color: var(--gold)">Информация</h2>
+                <button class="action-btn" onclick="alert('Новости')">Новости</button>
+                <button class="action-btn" onclick="alert('Поддержка')">Поддержка</button>
+            </div>
         </div>
 
     </div>
 
     <div class="bottom-dock">
         <div class="nav-container">
-            <div class="nav-item">💰 Заработок</div>
-            <div class="nav-item">👤 Профиль</div>
-            <div class="nav-item">ℹ️ Информация</div>
+            <div class="nav-item active" id="nav-earn" onclick="showPage('earn')">💰 Заработок</div>
+            <div class="nav-item" id="nav-profile" onclick="showPage('profile')">👤 Профиль</div>
+            <div class="nav-item" id="nav-info" onclick="showPage('info')">ℹ️ Информация</div>
         </div>
     </div>
 
     <script>
-        // Пример скрипта для показа страниц
-        function showPage(id) {
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let balance = 0;
+
+        // Переключение страниц
+        function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById('nav-' + pageId).classList.add('active');
         }
+
+        // Пример функции для обновления баланса
+        function updateBalance(amount) {
+            balance += amount;
+            document.getElementById('top-balance').innerText = `Баланс: ${balance}₽`;
+        }
+
+        // Пример для кнопок на рефералах и заданиях
+        document.querySelectorAll('.action-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                updateBalance(10); // Добавление 10₽ за выполнение действия
+            });
+        });
     </script>
 </body>
 </html>
