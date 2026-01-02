@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Money App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --gold: #f3e5ab;
+  --glass: rgba(0,0,0,0.6);
+  --border: rgba(255,255,255,0.15);
+  --btn-dark: rgba(0,0,0,0.5);
+}
+
+body{
+  margin:0;
+  font-family:'Arial Black',sans-serif;
+  background: radial-gradient(circle at center,#1b3d2f 0%,#000 100%);
+  color:white;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.header{
+  display:flex;
+  justify-content:flex-end;
+  padding:20px;
+  gap:12px;
+  z-index:10;
+}
+.header-balance{
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  padding:8px 16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  font-weight:bold;
+  color:var(--gold);
+}
+.notif-btn{
+  background:var(--glass);
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.app-title{
+  text-align:center;
+  font-size:44px;
+  color:var(--gold);
+  text-transform:uppercase;
+  text-shadow:0 4px 10px rgba(0,0,0,0.9);
+  margin-top:10px;
+  letter-spacing:-2px;
+}
+
+.main-container{
+  flex:1;
+  padding:0 25px;
+  overflow-y:auto;
+  padding-bottom:160px;
+}
+
+.glass-card{
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-radius:15px;
+  padding:25px;
+  border:1px solid var(--border);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.page{display:none;}
+.page.active{display:block;animation:fadeIn .3s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.avatar{
+  width:80px;
+  height:80px;
+  border-radius:15px;
+  background:#333;
+  margin-bottom:15px;
+  border:2px solid var(--gold);
+}
+
+.bottom-dock{
+  position:fixed;
+  bottom:-5px;
+  left:0;
+  width:100%;
+  height:125px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
+  border-radius:50px 50px 0 0;
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:center;
+  padding-top:25px;
+  z-index:100;
+}
+
+.nav-container{
+  display:flex;
+  width:90%;
+  justify-content:space-around;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 22px;
+  border-radius:35px;
+  color:white;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.3s;
+  background:var(--btn-dark);
+}
+
+.action-btn{
+  padding:14px 22px;
+  border:none;
+  border-radius:18px;
+  background:var(--btn-dark);
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:12px;
+}
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-balance">Баланс: <span id="top-balance">0</span>₽</div>
+</div>
+
+<div class="app-title">Easy Money</div>
+
+<div class="main-container">
+
+  <!-- EARN -->
+  <div id="earn" class="page active">
+    <div class="glass-card">
+      <h2 style="color:var(--gold)">Приглашение друзей</h2>
+      <p>1 друг = <b>10₽</b> + 200 энергии</p>
+      <button class="action-btn" onclick="copyRef()">Скопировать ссылку</button>
+    </div>
+    <div class="glass-card">
+      <h2 style="color:var(--gold)">Выполнение заданий</h2>
+      <div id="tasks-list"></div>
+    </div>
+    <div class="glass-card">
+      <h2 style="color:var(--gold)">Клики</h2>
+      <div>Энергия: <span id="energy">1000</span>/1000</div>
+      <div style="font-size:80px;cursor:pointer;margin-top:20px;" onclick="tap()">🪙</div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile" class="page">
+    <div class="glass-card">
+      <img id="user-avatar" class="avatar" src="https://via.placeholder.com/80" alt="Ava">
+      <h2 id="user-name">User</h2>
+      <p>Баланс: <span id="profile-balance">0</span>₽</p>
+      <h3 style="color:var(--gold)">История начислений</h3>
+      <div id="history-log" style="text-align:left;"></div>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div id="info" class="page">
+    <div class="glass-card">
+      <h2 style="color:var(--gold)">Информация</h2>
+      <button class="action-btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
+      <button class="action-btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+      <div id="admin-btn-container"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN (скрыто, только для твоего ID) -->
+  <div id="admin" class="page">
+    <div class="glass-card">
+      <h2 style="color:var(--gold)">Админка</h2>
+      <div id="admin-tasks"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-dock">
+  <div class="nav-container">
+    <div class="nav-item active" id="nav-earn" onclick="showPage('earn')">💰</div>
+    <div class="nav-item" id="nav-profile" onclick="showPage('profile')">👤</div>
+    <div class="nav-item" id="nav-info" onclick="showPage('info')">ℹ️</div>
+    <div class="nav-item" id="nav-admin" style="display:none" onclick="showPage('admin')">🛠</div>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+let balance = 0;
+let energy = 1000;
+const adminID = 7020322752;
+const userID = tg.initDataUnsafe?.user?.id || 0;
+const historyLog = document.getElementById('history-log');
+
+if(tg.initDataUnsafe?.user){
+  document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+  if(tg.initDataUnsafe.user.photo_url) document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url;
+}
+
+// Show admin button only for adminID
+if(userID == adminID){
+  document.getElementById('nav-admin').style.display='flex';
+  const adminBtnContainer = document.getElementById('admin-btn-container');
+  const btn = document.createElement('button');
+  btn.innerText = "Открыть админку";
+  btn.className = "action-btn";
+  btn.onclick = ()=> showPage('admin');
+  adminBtnContainer.appendChild(btn);
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const navId = document.getElementById('nav-'+id);
+  if(navId) navId.classList.add('active');
+}
+
+function addHistory(reason, amount){
+  const item = document.createElement('div');
+  item.innerHTML = `<span>${reason}</span> <span style="color:var(--gold)">+${amount}</span>`;
+  historyLog.prepend(item);
+}
+
+function addMoney(amount, reason){
+  balance += amount;
+  document.getElementById('top-balance').innerText = balance;
+  document.getElementById('profile-balance').innerText = balance;
+  addHistory(reason, amount);
+}
+
+function tap(){
+  if(energy<=0){alert('Энергия закончилась'); return;}
+  energy--;
+  balance += 0.005;
+  document.getElementById('top-balance').innerText = balance.toFixed(3);
+  document.getElementById('profile-balance').innerText = balance.toFixed(3);
+  document.getElementById('energy').innerText = energy;
+  addHistory("Клик",0.005);
+}
+
+function copyRef(){
+  const ref = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  navigator.clipboard.writeText(ref);
+  alert("Ссылка скопирована");
+}
+
+// ADMIN FUNCTIONS
+const adminTasks = document.getElementById('admin-tasks');
+let tasks = [];
+
+function createTask(name, desc, link, price){
+  const task = {name,desc,link,price};
+  tasks.push(task);
+  renderTasks();
+}
+
+function deleteTask(index){
+  tasks.splice(index,1);
+  renderTasks();
+}
+
+function renderTasks(){
+  adminTasks.innerHTML="";
+  tasks.forEach((t,i)=>{
+    const div = document.createElement('div');
+    div.className="glass-card";
+    div.innerHTML=`
+      <h3>${t.name}</h3>
+      <p>${t.desc}</p>
+      <p>Цена: ${t.price}₽</p>
+      <button class="action-btn" onclick="window.open('${t.link}','_blank')">Перейти</button>
+      <button class="action-btn" style="background:red;margin-top:6px" onclick="deleteTask(${i})">Удалить</button>
+    `;
+    adminTasks.appendChild(div);
+  });
+}
+
+</script>
+</body>
+</html>
