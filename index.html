@@ -2,201 +2,213 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EASY MONEY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 *{box-sizing:border-box}
+html,body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial, sans-serif;
+}
 
 body{
-  margin:0;
-  font-family:Arial Black, sans-serif;
-  background:url('https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg') center/cover no-repeat fixed;
-  color:#fff;
-  height:100vh;
-  overflow:hidden;
+  background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;
+  color:white;
 }
 
-/* ---------- HEADER ---------- */
-.header{
-  height:70px;
+/* TOP */
+.top{
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  padding:0 20px;
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,.35);
+  align-items:center;
+  padding:15px 20px;
 }
-
 .title{
-  font-size:34px;
+  font-size:42px;
   font-weight:900;
 }
-
 .balance{
-  padding:10px 16px;
-  border-radius:20px;
   background:rgba(0,0,0,.5);
-  border:1px solid rgba(255,255,255,.3);
+  padding:10px 16px;
+  border-radius:14px;
 }
 
-/* ---------- PAGES ---------- */
+/* PAGES */
 .page{
   display:none;
   padding:20px;
-  height:calc(100vh - 160px);
+  height:calc(100% - 160px);
 }
 .page.active{display:block}
 
-/* ---------- CARDS ---------- */
+/* CARDS */
 .card{
-  border-radius:22px;
-  padding:24px;
-  margin-bottom:18px;
-  background:linear-gradient(
-    135deg,
-    rgba(255,255,255,.18),
-    rgba(0,0,0,.35)
-  );
-  backdrop-filter: blur(18px);
-  border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.45);
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:15px;
 }
 
-/* ---------- BUTTONS ---------- */
-.big-btn{
+/* BUTTONS */
+.btn{
   width:100%;
-  padding:22px;
-  border-radius:22px;
-  border:1px solid rgba(255,255,255,.6);
-  background:rgba(0,0,0,.55);
-  color:#fff;
+  padding:16px;
+  margin-top:10px;
   font-size:18px;
-  font-weight:900;
-  margin-top:12px;
+  border:none;
+  border-radius:16px;
+  color:white;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(0,0,0,.4));
 }
 
-/* ---------- PROFILE ---------- */
-.avatar{
-  width:90px;
-  height:90px;
-  border-radius:20px;
-  border:2px solid #fff;
-  margin-bottom:10px;
-}
-
-/* ---------- BOTTOM MENU ---------- */
-.bottom{
+/* BOTTOM NAV */
+.nav{
   position:fixed;
   bottom:0;
-  left:0;
   width:100%;
   height:90px;
-  background:rgba(0,0,0,.45);
-  backdrop-filter:blur(20px);
+  background:rgba(0,0,0,.5);
   display:flex;
   justify-content:space-around;
   align-items:center;
 }
+.nav div{
+  font-size:30px;
+  opacity:.6;
+}
+.nav .active{opacity:1}
 
-.nav-btn{
-  width:60px;
-  height:60px;
-  border-radius:18px;
-  background:rgba(255,255,255,.15);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
+/* CLICK */
+.coin{
+  font-size:90px;
+  text-align:center;
+  margin-top:40px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
+<div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance">Баланс: <span id="bal">0</span>₽</div>
+  <div class="balance">Баланс: <span id="balance">0</span>₽</div>
 </div>
 
-<!-- EARN -->
+<!-- ЗАРАБОТОК -->
 <div id="earn" class="page active">
   <div class="card">
-    <h2>Заработок на рефералах</h2>
-    <button class="big-btn">Перейти</button>
-  </div>
-
-  <div class="card">
-    <h2>Заработок на заданиях</h2>
-    <button class="big-btn">Перейти</button>
-  </div>
-
-  <div class="card">
-    <h2>Заработок на кликах</h2>
-    <button class="big-btn" onclick="tap()">Кликать</button>
+    <button class="btn" onclick="openRef()">Заработок на рефералах</button>
+    <button class="btn" onclick="openTasks()">Заработок на заданиях</button>
+    <button class="btn" onclick="openClick()">Заработок на кликах</button>
   </div>
 </div>
 
-<!-- PROFILE -->
+<!-- ПРОФИЛЬ -->
 <div id="profile" class="page">
-  <div class="card" style="text-align:center">
-    <img id="ava" class="avatar" src="">
+  <div class="card">
+    <img id="avatar" width="80" style="border-radius:50%">
     <div>ID: <span id="uid"></span></div>
-    <div>Выполнено: 0</div>
-    <div>Отклонено: 0</div>
+    <div>Выполнено: <span id="done">0</span></div>
+    <div>Отклонено: <span id="fail">0</span></div>
   </div>
-
   <div class="card">
-    <h3>История начислений</h3>
-    <div id="history">—</div>
-  </div>
-
-  <div class="card">
-    <h3>Задания на проверке</h3>
-    <div>—</div>
+    <b>История начислений</b>
+    <div id="history"></div>
   </div>
 </div>
 
-<!-- INFO -->
+<!-- ИНФО -->
 <div id="info" class="page">
   <div class="card">
-    <h2>Информация</h2>
-    <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/news')">Новостной канал</button>
-    <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <button id="adminBtn" class="btn" style="display:none" onclick="openAdmin()">Админка</button>
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
-<div class="bottom">
-  <div class="nav-btn" onclick="openPage('earn')">💰</div>
-  <div class="nav-btn" onclick="openPage('profile')">👤</div>
-  <div class="nav-btn" onclick="openPage('info')">ℹ️</div>
+<!-- КЛИКИ -->
+<div id="click" class="page">
+  <div class="card">
+    Энергия: <span id="energy">1000</span>/1000
+    <div class="coin" onclick="tap()">🪙</div>
+    <button class="btn" onclick="back()">Назад</button>
+  </div>
+</div>
+
+<!-- НАВ -->
+<div class="nav">
+  <div id="n-earn" class="active" onclick="show('earn')">💰</div>
+  <div id="n-profile" onclick="show('profile')">👤</div>
+  <div id="n-info" onclick="show('info')">ℹ️</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let bal = 0;
+const user = tg.initDataUnsafe.user;
+const userID = user?.id || 0;
 
-if(tg.initDataUnsafe?.user){
-  document.getElementById('uid').innerText = tg.initDataUnsafe.user.id;
-  if(tg.initDataUnsafe.user.photo_url){
-    document.getElementById('ava').src = tg.initDataUnsafe.user.photo_url;
-  }
+document.getElementById("uid").innerText = userID;
+document.getElementById("avatar").src = user?.photo_url || "";
+
+if(userID == 7020322752){
+  document.getElementById("adminBtn").style.display="block";
 }
 
-function openPage(id){
+let balance = 0;
+let energy = 1000;
+
+function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  document.getElementById('n-'+id)?.classList.add('active');
+}
+
+function openRef(){
+  alert(
+`Приглашайте друзей и зарабатывайте:
+10₽ + 200 энергии
+
+https://t.me/DifferentEarningsBot?start=${userID}`
+  );
+}
+
+function openTasks(){
+  alert("Задания будут подгружаться из Firebase");
+}
+
+function openClick(){
+  show('click');
 }
 
 function tap(){
-  bal += 0.01;
-  document.getElementById('bal').innerText = bal.toFixed(2);
-  document.getElementById('history').innerHTML = `Клик +0.01₽<br>` + document.getElementById('history').innerHTML;
+  if(energy<=0)return;
+  energy--;
+  balance+=0.005;
+  document.getElementById("energy").innerText=energy;
+  document.getElementById("balance").innerText=balance.toFixed(3);
 }
+
+function back(){show('earn')}
+
+/* FIREBASE */
+firebase.initializeApp({
+  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+  authDomain: "cash-1968a.firebaseapp.com",
+  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+  projectId: "cash-1968a"
+});
 </script>
 
 </body>
