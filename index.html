@@ -3,182 +3,199 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Easy Money</title>
+<title>EASY MONEY</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  height:100vh;
-  font-family: 'Arial Black', sans-serif;
+  font-family:Arial Black, sans-serif;
+  background:url('https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg') center/cover no-repeat fixed;
   color:#fff;
-  background:url('https://i.postimg.cc/R0XCH8F1/IMG-20260102-191417-881.jpg') center/cover no-repeat;
-  display:flex;
-  flex-direction:column;
+  height:100vh;
   overflow:hidden;
 }
 
-/* ===== HEADER ===== */
+/* ---------- HEADER ---------- */
 .header{
+  height:70px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  padding:16px 20px;
-  background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(6px);
+  justify-content:space-between;
+  padding:0 20px;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,.35);
 }
 
 .title{
-  font-size:42px;
+  font-size:34px;
   font-weight:900;
-  letter-spacing:1px;
 }
 
 .balance{
-  font-size:18px;
-  padding:8px 14px;
-  border-radius:14px;
-  background:rgba(0,0,0,0.6);
-  border:1px solid rgba(255,255,255,0.35);
+  padding:10px 16px;
+  border-radius:20px;
+  background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,255,255,.3);
 }
 
-/* ===== PAGES ===== */
-.main{
-  flex:1;
-  overflow-y:auto;
+/* ---------- PAGES ---------- */
+.page{
+  display:none;
   padding:20px;
+  height:calc(100vh - 160px);
 }
+.page.active{display:block}
 
-.page{display:none;}
-.page.active{display:block;}
-
-/* ===== BUTTON CARDS ===== */
+/* ---------- CARDS ---------- */
 .card{
-  margin-bottom:20px;
-  padding:26px;
-  border-radius:20px;
-  text-align:center;
-  cursor:pointer;
-
-  background:
-    linear-gradient(135deg,
-      rgba(255,255,255,0.08),
-      rgba(0,0,0,0.55)
-    );
-
-  border:1.5px solid rgba(255,255,255,0.45);
-  backdrop-filter:blur(8px);
-
-  box-shadow:
-    0 10px 25px rgba(0,0,0,0.6),
-    inset 0 0 0 1px rgba(255,255,255,0.12);
+  border-radius:22px;
+  padding:24px;
+  margin-bottom:18px;
+  background:linear-gradient(
+    135deg,
+    rgba(255,255,255,.18),
+    rgba(0,0,0,.35)
+  );
+  backdrop-filter: blur(18px);
+  border:1px solid rgba(255,255,255,.35);
 }
 
-.card h2{
-  margin:0;
-  font-size:22px;
+/* ---------- BUTTONS ---------- */
+.big-btn{
+  width:100%;
+  padding:22px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.6);
+  background:rgba(0,0,0,.55);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  margin-top:12px;
 }
 
-/* ===== PROFILE ===== */
-.profile-card{
-  padding:25px;
-  border-radius:20px;
-  background:rgba(0,0,0,0.55);
-  border:1px solid rgba(255,255,255,0.35);
-  backdrop-filter:blur(8px);
-}
-
+/* ---------- PROFILE ---------- */
 .avatar{
   width:90px;
   height:90px;
-  border-radius:18px;
+  border-radius:20px;
   border:2px solid #fff;
   margin-bottom:10px;
 }
 
-/* ===== BOTTOM NAV ===== */
-.bottom-nav{
-  height:82px;
+/* ---------- BOTTOM MENU ---------- */
+.bottom{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:90px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(20px);
   display:flex;
   justify-content:space-around;
   align-items:center;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(8px);
-  border-top:1px solid rgba(255,255,255,0.25);
 }
 
 .nav-btn{
+  width:60px;
+  height:60px;
+  border-radius:18px;
+  background:rgba(255,255,255,.15);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-size:28px;
-  cursor:pointer;
-  opacity:.6;
-}
-.nav-btn.active{
-  opacity:1;
-  transform:scale(1.15);
 }
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <div class="title">EASY MONEY</div>
   <div class="balance">Баланс: <span id="bal">0</span>₽</div>
 </div>
 
-<div class="main">
-
-  <!-- EARN -->
-  <div id="earn" class="page active">
-    <div class="card"><h2>Заработок на рефералах</h2></div>
-    <div class="card"><h2>Заработок на выполнении заданий</h2></div>
-    <div class="card"><h2>Заработок на кликах</h2></div>
+<!-- EARN -->
+<div id="earn" class="page active">
+  <div class="card">
+    <h2>Заработок на рефералах</h2>
+    <button class="big-btn">Перейти</button>
   </div>
 
-  <!-- PROFILE -->
-  <div id="profile" class="page">
-    <div class="profile-card">
-      <img id="avatar" class="avatar" src="https://via.placeholder.com/90">
-      <h2 id="name">User</h2>
-      <p>ID: <span id="uid">0</span></p>
-      <p>Выполнено заданий: 0</p>
-      <p>Отклонено заданий: 0</p>
-      <h3>История начислений</h3>
-      <div id="history"></div>
-    </div>
+  <div class="card">
+    <h2>Заработок на заданиях</h2>
+    <button class="big-btn">Перейти</button>
   </div>
 
-  <!-- INFO -->
-  <div id="info" class="page">
-    <div class="card">
-      <h2>Информация</h2>
-      <p>Новости и поддержка</p>
-    </div>
+  <div class="card">
+    <h2>Заработок на кликах</h2>
+    <button class="big-btn" onclick="tap()">Кликать</button>
   </div>
-
 </div>
 
-<div class="bottom-nav">
-  <div class="nav-btn active" onclick="openPage('earn',this)">💰</div>
-  <div class="nav-btn" onclick="openPage('profile',this)">👤</div>
-  <div class="nav-btn" onclick="openPage('info',this)">ℹ️</div>
+<!-- PROFILE -->
+<div id="profile" class="page">
+  <div class="card" style="text-align:center">
+    <img id="ava" class="avatar" src="">
+    <div>ID: <span id="uid"></span></div>
+    <div>Выполнено: 0</div>
+    <div>Отклонено: 0</div>
+  </div>
+
+  <div class="card">
+    <h3>История начислений</h3>
+    <div id="history">—</div>
+  </div>
+
+  <div class="card">
+    <h3>Задания на проверке</h3>
+    <div>—</div>
+  </div>
+</div>
+
+<!-- INFO -->
+<div id="info" class="page">
+  <div class="card">
+    <h2>Информация</h2>
+    <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/news')">Новостной канал</button>
+    <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom">
+  <div class="nav-btn" onclick="openPage('earn')">💰</div>
+  <div class="nav-btn" onclick="openPage('profile')">👤</div>
+  <div class="nav-btn" onclick="openPage('info')">ℹ️</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+let bal = 0;
+
 if(tg.initDataUnsafe?.user){
-  name.innerText = tg.initDataUnsafe.user.first_name;
-  uid.innerText = tg.initDataUnsafe.user.id;
-  if(tg.initDataUnsafe.user.photo_url) avatar.src = tg.initDataUnsafe.user.photo_url;
+  document.getElementById('uid').innerText = tg.initDataUnsafe.user.id;
+  if(tg.initDataUnsafe.user.photo_url){
+    document.getElementById('ava').src = tg.initDataUnsafe.user.photo_url;
+  }
 }
 
-function openPage(id,el){
+function openPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
+}
+
+function tap(){
+  bal += 0.01;
+  document.getElementById('bal').innerText = bal.toFixed(2);
+  document.getElementById('history').innerHTML = `Клик +0.01₽<br>` + document.getElementById('history').innerHTML;
 }
 </script>
 
