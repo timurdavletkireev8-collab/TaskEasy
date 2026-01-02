@@ -5,155 +5,142 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Easy Money</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
-*{box-sizing:border-box}
-
-body{
+body {
   margin:0;
-  font-family:Arial Black, sans-serif;
-  height:100vh;
+  font-family:'Arial Black', sans-serif;
+  background: url('https://i.postimg.cc/R0XCH8F1/IMG-20260102-191417-881.jpg') no-repeat center center fixed;
+  background-size: cover;
   color:white;
-  background:
-    linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,.7)),
-    url("https://i.postimg.cc/R0XCH8F1/IMG-20260102-191417-881.jpg")
-    center/cover no-repeat;
+  height:100vh;
   display:flex;
   flex-direction:column;
   overflow:hidden;
 }
 
-/* HEADER */
-.header{
+.header {
   display:flex;
-  justify-content:space-between;
+  justify-content: space-between;
   align-items:center;
-  padding:15px 20px;
-}
-.title{
-  font-size:42px;
-  font-weight:900;
-}
-.balance{
-  font-size:18px;
-  padding:8px 14px;
-  border:2px solid white;
-  border-radius:14px;
-  background:rgba(0,0,0,.6);
+  padding: 15px 20px;
+  backdrop-filter: blur(6px);
 }
 
-/* CONTENT */
-.content{
+.header h1 {
+  font-size: 36px;
+  margin:0;
+}
+
+.header .balance {
+  background: rgba(0,0,0,0.5);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.main-container {
   flex:1;
   padding:20px;
+  overflow-y:auto;
 }
 
-.page{display:none}
-.page.active{display:block}
+.page { display:none; }
+.page.active { display:block; }
 
-/* BUTTONS */
-.big-btn{
+.card-btn {
   width:100%;
   padding:20px;
   margin-bottom:15px;
-  background:rgba(0,0,0,.7);
-  border:2px solid white;
   border-radius:18px;
+  border:none;
   color:white;
+  font-weight:bold;
   font-size:18px;
-  font-weight:700;
+  cursor:pointer;
+  background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(50,50,50,0.6));
+  transition: 0.3s;
+}
+.card-btn:hover {
+  opacity:0.85;
 }
 
-/* PROFILE */
-.avatar{
-  width:90px;
-  height:90px;
-  border-radius:20px;
-  border:2px solid white;
-  margin-bottom:10px;
-}
-
-/* BOTTOM MENU */
-.bottom{
+.bottom-dock {
+  position: fixed;
+  bottom:0;
+  left:0;
+  width:100%;
   height:80px;
+  background: rgba(0,0,0,0.5);
   display:flex;
   justify-content:space-around;
   align-items:center;
-  background:rgba(0,0,0,.8);
+  border-top: 1px solid rgba(255,255,255,0.2);
 }
-.nav{
+
+.nav-item {
   font-size:28px;
   cursor:pointer;
 }
-.nav.active{opacity:1}
-.nav:not(.active){opacity:.5}
 </style>
 </head>
-
 <body>
-
 <div class="header">
-  <div class="title">EASY MONEY</div>
-  <div class="balance">Баланс: <span id="bal">0</span> ₽</div>
+  <h1>Easy Money</h1>
+  <div class="balance">Баланс: <span id="top-balance">0</span>₽</div>
 </div>
 
-<div class="content">
+<div class="main-container">
 
-<!-- EARN -->
-<div id="earn" class="page active">
-  <button class="big-btn">Заработок на рефералах</button>
-  <button class="big-btn">Заработок на заданиях</button>
-  <button class="big-btn">Заработок на кликах</button>
+  <!-- Заработок -->
+  <div id="earn" class="page active">
+    <button class="card-btn" onclick="alert('Заработок на рефералах')">Заработок на рефералах</button>
+    <button class="card-btn" onclick="alert('Заработок на выполнении заданий')">Заработок на выполнении заданий</button>
+    <button class="card-btn" onclick="alert('Заработок на кликах')">Заработок на кликах</button>
+  </div>
+
+  <!-- Профиль -->
+  <div id="profile" class="page">
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <img id="user-avatar" src="https://via.placeholder.com/100" style="border-radius:12px; margin-bottom:15px;">
+      <h2 id="user-name">User</h2>
+      <p>ID: <span id="user-id">0</span></p>
+      <p>Выполнено заданий: 0</p>
+      <p>Отклонено заданий: 0</p>
+      <h3>История начислений</h3>
+      <div id="history-log" style="text-align:left; width:100%; max-height:150px; overflow-y:auto;"></div>
+      <h3>Задания на проверке</h3>
+      <div id="pending-tasks" style="text-align:left; width:100%; max-height:150px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Информация -->
+  <div id="info" class="page">
+    <button class="card-btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <button class="card-btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+  </div>
+
 </div>
 
-<!-- PROFILE -->
-<div id="profile" class="page">
-  <img id="avatar" class="avatar" src="https://via.placeholder.com/90">
-  <div>ID: <span id="uid">—</span></div>
-  <br>
-  <div>Выполнено заданий: 0</div>
-  <div>Отклонено заданий: 0</div>
-  <br>
-  <button class="big-btn">История начислений</button>
-  <button class="big-btn">Задания на проверке</button>
-</div>
-
-<!-- INFO -->
-<div id="info" class="page">
-  <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/news')">
-    Новостной канал
-  </button>
-  <button class="big-btn" onclick="tg.openTelegramLink('https://t.me/support')">
-    Поддержка
-  </button>
-</div>
-
-</div>
-
-<div class="bottom">
-  <div class="nav active" onclick="show('earn')">💰</div>
-  <div class="nav" onclick="show('profile')">👤</div>
-  <div class="nav" onclick="show('info')">ℹ️</div>
+<div class="bottom-dock">
+  <div class="nav-item" onclick="showPage('earn')">💰</div>
+  <div class="nav-item" onclick="showPage('profile')">👤</div>
+  <div class="nav-item" onclick="showPage('info')">ℹ️</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-if(tg.initDataUnsafe?.user){
-  document.getElementById('uid').innerText = tg.initDataUnsafe.user.id;
-  if(tg.initDataUnsafe.user.photo_url){
-    document.getElementById('avatar').src = tg.initDataUnsafe.user.photo_url;
-  }
-}
+document.getElementById('user-name').innerText = tg.initDataUnsafe?.user?.first_name || 'User';
+document.getElementById('user-id').innerText = tg.initDataUnsafe?.user?.id || '0';
 
-function show(id){
+let balance = 0;
+document.getElementById('top-balance').innerText = balance;
+
+function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
 }
 </script>
-
 </body>
 </html>
