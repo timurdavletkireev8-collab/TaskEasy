@@ -1,231 +1,200 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Money App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --gold: #f3e5ab;
-            --glass: rgba(0, 0, 0, 0.6);
-            --border: rgba(255, 255, 255, 0.15);
-            --btn-border: #ffffff;
-            --btn-hover: #f3e5ab;
-            --btn-bg: black;
-            --neon-glow: 0 0 10px #ffffff, 0 0 15px #ffffff;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Money</title>
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial Black', sans-serif;
-            background: linear-gradient(to bottom, #ff7e5f, #feb47b); /* Красочные градиенты */
-            color: white;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-        .header {
-            display: flex;
-            justify-content: flex-start;
-            padding: 20px;
-            z-index: 10;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
 
-        .app-title {
-            font-size: 50px;
-            font-weight: bold;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);
-        }
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-        .balance {
-            margin-left: auto;
-            padding: 8px 16px;
-            background: var(--glass);
-            border-radius: 12px;
-            font-weight: bold;
-            color: var(--gold);
-            text-align: center;
-            border: 1px solid var(--border);
-        }
+body{
+  height:100vh;
+  font-family:'Montserrat',sans-serif;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:white;
+  overflow:hidden;
+}
 
-        .main-container {
-            flex: 1;
-            padding: 0 25px;
-            overflow-y: auto;
-            padding-bottom: 160px;
-        }
+.app{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
 
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            margin-bottom: 15px;
-        }
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px;
+}
 
-        .action-btn {
-            padding: 14px 24px;
-            border: 2px solid var(--btn-border);
-            border-radius: 18px;
-            background: var(--btn-bg);
-            color: var(--gold);
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 12px;
-            box-shadow: var(--neon-glow);
-        }
+.title{
+  font-size:42px;
+  font-weight:900;
+  letter-spacing:2px;
+}
 
-        .action-btn:hover {
-            background-color: var(--btn-hover);
-            box-shadow: var(--neon-glow);
-        }
+.balance{
+  background:black;
+  padding:12px 18px;
+  border-radius:18px;
+  border:2px solid white;
+  box-shadow:0 0 15px white;
+  font-size:16px;
+}
 
-        .bottom-dock {
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            height: 90px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 50px 50px 0 0;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: center;
-            padding-top: 15px;
-            z-index: 100;
-        }
+/* CONTENT */
+.content{
+  flex:1;
+  padding:20px;
+}
 
-        .nav-container {
-            display: flex;
-            width: 85%;
-            justify-content: space-around;
-        }
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
 
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 18px;
-            border-radius: 35px;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            background: var(--btn-bg);
-            box-shadow: var(--neon-glow);
-        }
+/* UNIVERSAL BLACK CARD / BUTTON */
+.block{
+  background:black;
+  border:2px solid white;
+  box-shadow:0 0 18px rgba(255,255,255,0.9);
+  border-radius:22px;
+  padding:22px;
+  margin-bottom:20px;
+  text-align:center;
+  font-size:20px;
+}
 
-        .nav-item:hover {
-            background: var(--btn-hover);
-            box-shadow: var(--neon-glow);
-        }
+/* PROFILE */
+.profile{
+  text-align:center;
+}
 
-        .page {
-            display: none;
-        }
+.profile img{
+  width:90px;
+  height:90px;
+  border-radius:20px;
+  border:2px solid white;
+  box-shadow:0 0 15px white;
+  margin-bottom:12px;
+}
 
-        .page.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
+.small{
+  font-size:14px;
+  opacity:0.85;
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
+/* BOTTOM NAV */
+.bottom{
+  height:90px;
+  background:black;
+  border-top:2px solid white;
+  box-shadow:0 -5px 15px white;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+}
+
+.nav-btn{
+  width:60px;
+  height:60px;
+  background:black;
+  border:2px solid white;
+  box-shadow:0 0 15px white;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  cursor:pointer;
+}
+
+.nav-btn.active{
+  box-shadow:0 0 25px white;
+}
+</style>
 </head>
+
 <body>
-    <div class="header">
-        <div class="app-title">Easy Money</div>
-        <div class="balance" id="top-balance">Баланс: 0₽</div>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="title">EASY MONEY</div>
+    <div class="balance">Баланс: 0₽</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- EARN -->
+    <div id="earn" class="page active">
+      <div class="block">Заработок на рефералах</div>
+      <div class="block">Заработок на выполнении заданий</div>
+      <div class="block">Заработок на кликах</div>
     </div>
 
-    <div class="main-container">
+    <!-- PROFILE -->
+    <div id="profile" class="page">
+      <div class="block profile">
+        <img id="avatar" src="https://via.placeholder.com/90">
+        <div id="username">Пользователь</div>
+        <div class="small">ID: <span id="userid">0</span></div>
+      </div>
 
-        <!-- Разделы заработка -->
-        <div id="earn" class="page active">
-            <div class="glass-card">
-                <h2 style="color: var(--gold)">Заработок на рефералах</h2>
-                <button class="action-btn">Перейти к рефералам</button>
-            </div>
-
-            <div class="glass-card">
-                <h2 style="color: var(--gold)">Заработок на выполнение заданий</h2>
-                <button class="action-btn">Перейти к заданиям</button>
-            </div>
-
-            <div class="glass-card">
-                <h2 style="color: var(--gold)">Заработок на кликах</h2>
-                <button class="action-btn">Начать кликать</button>
-            </div>
-        </div>
-
-        <div id="profile" class="page">
-            <div class="glass-card">
-                <h2 style="color: var(--gold)">Профиль</h2>
-                <p>Здесь будет информация о профиле пользователя</p>
-            </div>
-        </div>
-
-        <div id="info" class="page">
-            <div class="glass-card">
-                <h2 style="color: var(--gold)">Информация</h2>
-                <button class="action-btn" onclick="alert('Новости')">Новости</button>
-                <button class="action-btn" onclick="alert('Поддержка')">Поддержка</button>
-            </div>
-        </div>
-
+      <div class="block">Выполнено заданий: 0</div>
+      <div class="block">Отклонено заданий: 0</div>
+      <div class="block">История начислений</div>
+      <div class="block">Задания на проверке</div>
     </div>
 
-    <div class="bottom-dock">
-        <div class="nav-container">
-            <div class="nav-item active" id="nav-earn" onclick="showPage('earn')">💰 Заработок</div>
-            <div class="nav-item" id="nav-profile" onclick="showPage('profile')">👤 Профиль</div>
-            <div class="nav-item" id="nav-info" onclick="showPage('info')">ℹ️ Информация</div>
-        </div>
+    <!-- INFO -->
+    <div id="info" class="page">
+      <div class="block">Новостной канал</div>
+      <div class="block">Поддержка</div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+  </div>
 
-        let balance = 0;
+  <!-- BOTTOM NAV -->
+  <div class="bottom">
+    <div class="nav-btn active" onclick="openPage('earn',this)">💰</div>
+    <div class="nav-btn" onclick="openPage('profile',this)">👤</div>
+    <div class="nav-btn" onclick="openPage('info',this)">ℹ️</div>
+  </div>
 
-        // Переключение страниц
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            document.getElementById('nav-' + pageId).classList.add('active');
-        }
+</div>
 
-        // Пример функции для обновления баланса
-        function updateBalance(amount) {
-            balance += amount;
-            document.getElementById('top-balance').innerText = `Баланс: ${balance}₽`;
-        }
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-        // Пример для кнопок на рефералах и заданиях
-        document.querySelectorAll('.action-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                updateBalance(10); // Добавление 10₽ за выполнение действия
-            });
-        });
-    </script>
+function openPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+if(tg.initDataUnsafe?.user){
+  document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+  document.getElementById('userid').innerText = tg.initDataUnsafe.user.id;
+  if(tg.initDataUnsafe.user.photo_url){
+    document.getElementById('avatar').src = tg.initDataUnsafe.user.photo_url;
+  }
+}
+</script>
+
 </body>
 </html>
