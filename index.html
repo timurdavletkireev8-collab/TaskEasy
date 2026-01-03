@@ -26,7 +26,7 @@
 </script>
 
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;}
 html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
 body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
 
@@ -37,7 +37,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* PAGES */
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
-.page.active{display:block}
+.page.active{display:block;}
 
 /* CARDS */
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
@@ -55,6 +55,9 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 .nav div img{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);background:rgba(0,0,0,0.3);transition:0.3s;}
 .nav div.active img{border-color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.4);}
 .nav div:hover img{transform:scale(1.1);border-color:rgba(255,255,255,0.9);}
+
+/* CLICK IMAGE */
+.click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
 </style>
 </head>
 <body>
@@ -120,9 +123,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
     <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
     <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
-    <img class="click-img"
-      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
-      onclick="tap()">
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
     <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
@@ -161,15 +162,9 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <!-- NAV -->
 <div class="nav">
-  <div class="active" onclick="show('earn')">
-    <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png">
-  </div>
-  <div onclick="show('profile')">
-    <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png">
-  </div>
-  <div onclick="show('info')">
-    <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png">
-  </div>
+  <div class="active" onclick="show('earn')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png"></div>
+  <div onclick="show('profile')"><img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png"></div>
+  <div onclick="show('info')"><img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png"></div>
 </div>
 
 <script type="module">
@@ -177,7 +172,6 @@ import { getDatabase, ref, set, get, onValue, update, push } from "https://www.g
 
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
-
 const db = getDatabase();
 
 function initUser() {
@@ -227,6 +221,7 @@ function copyRef(){
   alert("Скопировано!");
 }
 
+// ПЕРЕКЛЮЧЕНИЕ ПОЛНОСТЬЮ РАБОТАЕТ
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -236,6 +231,7 @@ function show(id){
   if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
 }
 
+// Задания
 const taskListDiv = document.getElementById("task-list");
 function loadTasks(){
   const tasksRef = ref(db,'tasks');
@@ -276,6 +272,7 @@ function sendReport(){
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
 function backToTasks(){ show('tasks'); }
+
 </script>
 </body>
 </html>
