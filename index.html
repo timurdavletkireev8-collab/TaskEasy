@@ -30,44 +30,61 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:15px 20px;
+  padding:20px 24px;
 }
 .title{
-  font-size:42px;
+  font-size:44px;
   font-weight:900;
 }
 .balance{
-  background:rgba(0,0,0,.5);
-  padding:10px 16px;
-  border-radius:14px;
+  background:rgba(0,0,0,.55);
+  padding:12px 18px;
+  border-radius:16px;
 }
 
 /* PAGES */
 .page{
   display:none;
-  padding:20px;
-  height:calc(100% - 160px);
+  padding:24px;
+  height:calc(100% - 180px);
+  overflow-y:auto;
 }
 .page.active{display:block}
 
 /* CARDS */
 .card{
   background:rgba(0,0,0,.45);
-  border-radius:18px;
-  padding:20px;
-  margin-bottom:15px;
+  border-radius:22px;
+  padding:24px;
+  margin-bottom:20px;
 }
 
 /* BUTTONS */
 .btn{
   width:100%;
-  padding:16px;
-  margin-top:10px;
+  padding:18px;
+  margin-top:16px;
   font-size:18px;
   border:none;
-  border-radius:16px;
+  border-radius:18px;
   color:white;
-  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(0,0,0,.4));
+  background:linear-gradient(
+    135deg,
+    rgba(255,255,255,.18),
+    rgba(0,0,0,.45)
+  );
+}
+
+/* INPUT */
+input, textarea{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border-radius:14px;
+  border:none;
+  background:rgba(0,0,0,.5);
+  color:white;
+  font-size:16px;
 }
 
 /* BOTTOM NAV */
@@ -75,23 +92,23 @@ body{
   position:fixed;
   bottom:0;
   width:100%;
-  height:90px;
-  background:rgba(0,0,0,.5);
+  height:100px;
+  background:rgba(0,0,0,.55);
   display:flex;
   justify-content:space-around;
   align-items:center;
 }
 .nav div{
-  font-size:30px;
-  opacity:.6;
+  font-size:32px;
+  opacity:.5;
 }
 .nav .active{opacity:1}
 
 /* CLICK */
 .coin{
-  font-size:90px;
+  font-size:96px;
   text-align:center;
-  margin-top:40px;
+  margin:40px 0;
 }
 </style>
 </head>
@@ -107,19 +124,29 @@ body{
 <div id="earn" class="page active">
   <div class="card">
     <button class="btn" onclick="openRef()">Заработок на рефералах</button>
-    <button class="btn" onclick="openTasks()">Заработок на заданиях</button>
-    <button class="btn" onclick="openClick()">Заработок на кликах</button>
+    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="show('click')">Заработок на кликах</button>
+  </div>
+</div>
+
+<!-- ЗАДАНИЯ -->
+<div id="tasks" class="page">
+  <div class="card">
+    <h3>Доступные задания</h3>
+    <div id="taskList"></div>
+    <button class="btn" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
 <!-- ПРОФИЛЬ -->
 <div id="profile" class="page">
   <div class="card">
-    <img id="avatar" width="80" style="border-radius:50%">
+    <img id="avatar" width="90" style="border-radius:50%">
     <div>ID: <span id="uid"></span></div>
     <div>Выполнено: <span id="done">0</span></div>
     <div>Отклонено: <span id="fail">0</span></div>
   </div>
+
   <div class="card">
     <b>История начислений</b>
     <div id="history"></div>
@@ -131,7 +158,27 @@ body{
   <div class="card">
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <button id="adminBtn" class="btn" style="display:none" onclick="openAdmin()">Админка</button>
+    <button id="adminOpen" class="btn" style="display:none" onclick="show('admin')">
+      Админка
+    </button>
+  </div>
+</div>
+
+<!-- АДМИНКА -->
+<div id="admin" class="page">
+  <div class="card">
+    <h3>Добавить задание</h3>
+    <input id="aName" placeholder="Название">
+    <textarea id="aDesc" placeholder="Описание"></textarea>
+    <input id="aPrice" placeholder="Цена">
+    <input id="aLink" placeholder="Ссылка">
+    <button class="btn" onclick="addTask()">Добавить</button>
+  </div>
+
+  <div class="card">
+    <h3>Задания</h3>
+    <div id="adminTasks"></div>
+    <button class="btn" onclick="show('info')">Назад</button>
   </div>
 </div>
 
@@ -140,7 +187,7 @@ body{
   <div class="card">
     Энергия: <span id="energy">1000</span>/1000
     <div class="coin" onclick="tap()">🪙</div>
-    <button class="btn" onclick="back()">Назад</button>
+    <button class="btn" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -161,13 +208,14 @@ const userID = user?.id || 0;
 document.getElementById("uid").innerText = userID;
 document.getElementById("avatar").src = user?.photo_url || "";
 
-if(userID == 7020322752){
-  document.getElementById("adminBtn").style.display="block";
+if(userID === 7020322752){
+  document.getElementById("adminOpen").style.display="block";
 }
 
 let balance = 0;
 let energy = 1000;
 
+/* NAV */
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
@@ -175,32 +223,24 @@ function show(id){
   document.getElementById('n-'+id)?.classList.add('active');
 }
 
+/* REF */
 function openRef(){
   alert(
-`Приглашайте друзей и зарабатывайте:
+`Приглашайте друзей:
 10₽ + 200 энергии
 
 https://t.me/DifferentEarningsBot?start=${userID}`
   );
 }
 
-function openTasks(){
-  alert("Задания будут подгружаться из Firebase");
-}
-
-function openClick(){
-  show('click');
-}
-
+/* CLICK */
 function tap(){
-  if(energy<=0)return;
+  if(energy<=0) return;
   energy--;
   balance+=0.005;
   document.getElementById("energy").innerText=energy;
   document.getElementById("balance").innerText=balance.toFixed(3);
 }
-
-function back(){show('earn')}
 
 /* FIREBASE */
 firebase.initializeApp({
@@ -208,6 +248,34 @@ firebase.initializeApp({
   authDomain: "cash-1968a.firebaseapp.com",
   databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
   projectId: "cash-1968a"
+});
+
+const db = firebase.database();
+const tasksRef = db.ref("tasks");
+
+/* ADMIN */
+function addTask(){
+  const t = {
+    name:aName.value,
+    desc:aDesc.value,
+    price:aPrice.value,
+    link:aLink.value
+  };
+  tasksRef.push(t);
+}
+
+tasksRef.on("value",s=>{
+  taskList.innerHTML="";
+  adminTasks.innerHTML="";
+  s.forEach(c=>{
+    const t=c.val();
+    taskList.innerHTML+=`<div class="card">${t.name}</div>`;
+    adminTasks.innerHTML+=`
+      <div class="card">
+        ${t.name}
+        <button class="btn" onclick="tasksRef.child('${c.key}').remove()">Удалить</button>
+      </div>`;
+  });
 });
 </script>
 
