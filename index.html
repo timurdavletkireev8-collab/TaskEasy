@@ -4,15 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EASY MONEY</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
     authDomain: "cash-1968a.firebaseapp.com",
     databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
@@ -21,27 +18,39 @@
     messagingSenderId: "234016139024",
     appId: "1:234016139024:web:f11daa0328ff06173d2795",
     measurementId: "G-MFEKWBVN21"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 </script>
 
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;}
+
+/* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
 .title{font-size:22px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.8);border-radius:16px;backdrop-filter:blur(6px);}
 .balance{padding:10px 14px;background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.8);border-radius:16px;cursor:pointer;}
+
+/* PAGES */
 .page{display:none;padding:20px;height:calc(100% - 150px);overflow-y:auto;}
 .page.active{display:block}
+
+/* CARD */
 .card{background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.8);border-radius:22px;padding:20px;margin-bottom:20px;}
+
+/* BUTTON */
 .btn{width:100%;padding:16px;margin-top:14px;font-size:16px;font-weight:600;color:white;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:18px;cursor:pointer;}
 .btn-red{background:rgba(255,0,0,0.35);}
+
+/* NAV */
 .nav{position:fixed;bottom:0;width:100%;height:90px;background:rgba(0,0,0,0.6);display:flex;justify-content:space-around;align-items:center;}
 .nav img{width:48px;height:48px;opacity:0.6;cursor:pointer;}
 .nav img.active{opacity:1;}
+
+/* CLICK */
 .click-img{width:200px;height:200px;margin:30px auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.9);}
+.profile-photo{width:60px;height:60px;border-radius:50%;border:2px solid white;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -51,7 +60,7 @@ html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;backgrou
   <div class="balance" onclick="showPage('withdraw')">Баланс: <span id="balance">0.00</span>₽</div>
 </div>
 
-<!-- ЗАРАБОТОК -->
+<!-- EARN -->
 <div id="earn" class="page active">
   <div class="card">
     <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
@@ -60,27 +69,27 @@ html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;backgrou
   </div>
 </div>
 
-<!-- РЕФЕРАЛ -->
+<!-- REFERRAL -->
 <div id="referral" class="page">
   <div class="card">
     <h3>Приглашай друзей</h3>
     <p>+10₽ и 200 энергии за каждого</p>
     <p id="refLink"></p>
-    <button class="btn" onclick="copyRef()">Скопировать</button>
+    <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- ЗАДАНИЯ -->
+<!-- TASKS -->
 <div id="tasks" class="page">
   <div class="card">
     <h3>Задания</h3>
-    <div id="taskList"></div>
+    <div id="task-list"></div>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- КЛИК -->
+<!-- CLICK -->
 <div id="click" class="page">
   <div class="card">
     <p>Каждый клик +0.005₽</p>
@@ -90,135 +99,192 @@ html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;backgrou
   </div>
 </div>
 
-<!-- ПРОФИЛЬ -->
+<!-- PROFILE -->
 <div id="profile" class="page">
   <div class="card">
+    <img id="profile-photo" class="profile-photo" src="">
     <h3>Профиль</h3>
-    <img id="profilePic" src="" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px;">
     <p>ID: <span id="uid">0</span></p>
-    <p>Выполненные задания: <span id="doneTasks">0</span></p>
-    <p>Задания на проверке: <span id="onCheck">0</span></p>
-    <p>Отклонённые: <span id="failedTasks">0</span></p>
-    <h4>История начислений</h4>
-    <div id="history"></div>
+    <button class="btn" onclick="showPage('doneTasks')">Выполненные задания</button>
+    <button class="btn" onclick="showPage('tasks')">На проверке</button>
     <button class="btn btn-red" onclick="showPage('withdraw')">Вывести</button>
+    <div id="history"></div>
   </div>
 </div>
 
-<!-- ВЫВОД -->
+<!-- WITHDRAW -->
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>Вывод</h3>
-    <p>Скоро</p>
+    <h3>Вывод средств</h3>
+    <input type="text" id="card" placeholder="Номер карты">
+    <input type="number" id="withdraw-amount" placeholder="Сумма от 100₽">
+    <button class="btn" onclick="requestWithdraw()">Вывести</button>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
 
-<!-- ИНФОРМАЦИЯ -->
+<!-- ADMIN -->
+<div id="admin" class="page">
+  <div class="card">
+    <h3>Админка</h3>
+    <h4>Добавить задание</h4>
+    <input type="text" id="newTaskName" placeholder="Название">
+    <input type="text" id="newTaskDesc" placeholder="Описание">
+    <input type="text" id="newTaskLink" placeholder="Ссылка">
+    <input type="number" id="newTaskPrice" placeholder="Цена">
+    <button class="btn" onclick="addTask()">Добавить</button>
+    <h4>Заявки пользователей</h4>
+    <div id="reports-list"></div>
+    <h4>Вывод средств</h4>
+    <div id="withdraw-list"></div>
+    <button class="btn btn-red" onclick="showPage('info')">Назад</button>
+  </div>
+</div>
+
+<!-- INFO -->
 <div id="info" class="page">
   <div class="card">
     <h3>Информация</h3>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <div id="adminMenu"></div>
+    <button class="btn" onclick="showAdmin()" id="admin-btn" style="display:none;">Админка</button>
   </div>
 </div>
 
-<!-- НАВИГАЦИЯ -->
+<!-- NAV -->
 <div class="nav">
-  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', this)" class="active">
-  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile', this)">
-  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info', this)">
+  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn')" class="active">
+  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile')">
+  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info')">
 </div>
 
 <script type="module">
-import { getDatabase, ref, get, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-const db = getDatabase();
 const tg = window.Telegram.WebApp;
 tg.expand();
 
 let uid = tg.initDataUnsafe?.user?.id || 0;
-let balance = 0;
-let energy = 1000;
 document.getElementById("uid").innerText = uid;
-document.getElementById("refLink").innerText = "https://t.me/DifferentEarningsBot?start="+uid;
+document.getElementById("refLink").innerText = "https://t.me/DifferentEarningsBot?start=" + uid;
 
-// Создать пользователя в Firebase если нет
-function initUser(){
-  const userRef = ref(db,'users/'+uid);
-  get(userRef).then(snap=>{
-    if(!snap.exists()){
-      set(userRef,{
-        balance:0,
-        energy:1000,
-        doneTasks:0,
-        onCheck:0,
-        failedTasks:0,
-        history:[]
-      });
-    } else {
-      const data = snap.val();
-      balance = data.balance || 0;
-      energy = data.energy || 1000;
-      updateUI(data);
-    }
-  });
-}
-initUser();
+// Telegram photo
+document.getElementById("profile-photo").src = tg.initDataUnsafe?.user?.photo_url || "";
+
+// Firebase references
+const db = getDatabase();
+const userRef = ref(db, 'users/' + uid);
+
+// Инициализация пользователя
+get(userRef).then(snap=>{
+  if(!snap.exists()){
+    set(userRef,{balance:0,energy:1000,referrals:0,doneTasks:0,failedTasks:0,history:[]});
+  }
+});
 
 // Обновление UI
-function updateUI(data){
-  document.getElementById("balance").innerText = (data.balance||0).toFixed(3);
-  document.getElementById("energy").innerText = data.energy||1000;
-  document.getElementById("doneTasks").innerText = data.doneTasks||0;
-  document.getElementById("onCheck").innerText = data.onCheck||0;
-  document.getElementById("failedTasks").innerText = data.failedTasks||0;
-  const histDiv = document.getElementById("history");
-  histDiv.innerHTML="";
-  (data.history||[]).forEach(h=>{
-    const d = document.createElement("div");
-    d.innerText=h;
-    histDiv.prepend(d);
-  });
-  if(tg.initDataUnsafe.user?.photo_url){
-    document.getElementById("profilePic").src = tg.initDataUnsafe.user.photo_url;
+onValue(userRef, snap=>{
+  const data = snap.val();
+  if(data){
+    document.getElementById("balance").innerText = data.balance.toFixed(2);
+    document.getElementById("energy").innerText = data.energy;
+    document.getElementById("history").innerHTML = "";
+    data.history?.forEach(h=>{
+      const d = document.createElement("div");
+      d.innerText = h;
+      document.getElementById("history").prepend(d);
+    });
+    if(uid===7020322752) document.getElementById("admin-btn").style.display="block";
   }
-}
+});
 
-// Переключение страниц
+// Pages
 function showPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-
-// Навигация снизу
-function nav(id, el){
+function nav(id){
   document.querySelectorAll(".nav img").forEach(i=>i.classList.remove("active"));
+  event.target.classList.add("active");
   showPage(id);
-  el.classList.add("active");
 }
 
-// Кликер
+// Clicker
 function tap(){
-  const userRef = ref(db,'users/'+uid);
-  get(userRef).then(snapshot=>{
-    const data = snapshot.val();
-    if(!data) return;
+  get(userRef).then(snap=>{
+    const data = snap.val();
     if(data.energy<=0){alert("Энергия закончилась"); return;}
-    balance = parseFloat((data.balance + 0.005).toFixed(3));
-    energy = data.energy-1;
-    update(userRef,{balance:balance,energy:energy});
-    updateUI({...data,balance:balance,energy:energy});
+    update(userRef,{energy:data.energy-1,balance:(data.balance+0.005).toFixed(3)});
   });
 }
 
-// Копирование реферальной ссылки
+// Copy referral
 function copyRef(){
   navigator.clipboard.writeText(document.getElementById("refLink").innerText);
   alert("Ссылка скопирована");
 }
-</script>
 
+// ADMIN
+function showAdmin(){
+  showPage('admin');
+  loadReports();
+  loadWithdraws();
+}
+
+// Add task
+function addTask(){
+  const name = document.getElementById('newTaskName').value;
+  const desc = document.getElementById('newTaskDesc').value;
+  const link = document.getElementById('newTaskLink').value;
+  const price = Number(document.getElementById('newTaskPrice').value);
+  if(!name||!desc||!link||!price){alert("Заполните все поля");return;}
+  push(ref(db,'tasks'),{name,desc,link,price,reports:{}}).then(()=>alert("Задание добавлено"));
+}
+
+// Load reports
+function loadReports(){
+  const reportsDiv = document.getElementById('reports-list');
+  reportsDiv.innerHTML="";
+  const tasksRef = ref(db,'tasks');
+  onValue(tasksRef,snap=>{
+    snap.forEach(taskSnap=>{
+      const reports = taskSnap.val().reports || {};
+      Object.keys(reports).forEach(rid=>{
+        const btn = document.createElement("div");
+        btn.className="btn";
+        btn.innerText=`Заявка ${rid} на ${taskSnap.val().name}`;
+        btn.onclick = ()=>{alert("Здесь можно принять/отклонить заявку");};
+        reportsDiv.appendChild(btn);
+      });
+    });
+  });
+}
+
+// Withdraw
+function requestWithdraw(){
+  const card = document.getElementById('card').value;
+  const amount = Number(document.getElementById('withdraw-amount').value);
+  if(amount<100){alert("Минимум 100₽"); return;}
+  push(ref(db,'withdraws'),{uid,card,amount,status:'pending'});
+  alert("Заявка отправлена");
+}
+
+// Load withdraws (admin)
+function loadWithdraws(){
+  const withdrawDiv = document.getElementById('withdraw-list');
+  withdrawDiv.innerHTML="";
+  const wRef = ref(db,'withdraws');
+  onValue(wRef,snap=>{
+    snap.forEach(wSnap=>{
+      const w = wSnap.val();
+      const btn = document.createElement("div");
+      btn.className="btn";
+      btn.innerText=`Вывод ${w.amount}₽ от ${w.uid} (${w.card})`;
+      btn.onclick = ()=>{alert("Одобрить или отклонить");};
+      withdrawDiv.appendChild(btn);
+    });
+  });
+}
+</script>
 </body>
 </html>
