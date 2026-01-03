@@ -28,13 +28,10 @@ tg.expand();
 const userID = tg.initDataUnsafe?.user?.id || Date.now();
 const adminID = 7020322752;
 
-const userRef = ref(db,'users/'+userID);
-const tasksRef = ref(db,'tasks');
-const reportsRef = ref(db,'reports');
-
 // Инициализация пользователя
-get(userRef).then(snapshot=>{
-  if(!snapshot.exists()){
+const userRef = ref(db,'users/'+userID);
+get(userRef).then(snap=>{
+  if(!snap.exists()){
     set(userRef,{
       balance:0,
       energy:1000,
@@ -45,30 +42,16 @@ get(userRef).then(snapshot=>{
   }
 });
 
-// Функции
-window.tap = function(){
-  get(userRef).then(snapshot=>{
-    let data = snapshot.val();
-    if(data.energy<=0){alert("Энергия закончилась"); return;}
-    const newEnergy = data.energy-1;
-    const newBalance = +(data.balance+0.005).toFixed(3);
-    update(userRef,{energy:newEnergy,balance:newBalance});
-  });
-}
-
-function updateEnergyUI(energy){ 
-  const percent = (energy/1000)*100; 
-  document.getElementById("energy-bar").style.width = percent+"%";
-  document.getElementById("energy-text").innerText = `Энергия: ${energy}/1000`;
-}
-
-onValue(userRef, snapshot=>{
-  const data = snapshot.val();
+// Обновление UI
+onValue(userRef, snap=>{
+  const data = snap.val();
   if(data){
-    updateEnergyUI(data.energy);
     document.getElementById('balance-text').innerText = data.balance.toFixed(3);
     document.getElementById('completed-tasks').innerText = data.completedTasks;
     document.getElementById('rejected-tasks').innerText = data.rejectedTasks;
+    const percent = (data.energy/1000)*100;
+    document.getElementById("energy-bar").style.width = percent+"%";
+    document.getElementById("energy-text").innerText = `Энергия: ${data.energy}/1000`;
   }
 });
 
@@ -78,67 +61,45 @@ window.showPage = function(id){
   document.getElementById(id).style.display='block';
 }
 
-// Рефералы
-window.showReferral = function(){
-  showPage('referral');
-  const refLink = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  document.getElementById('ref-link').value = refLink;
-}
-
-window.copyReferral = function(){
-  const copyText = document.getElementById('ref-link');
-  copyText.select();
-  copyText.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyText.value);
-  alert('Ссылка скопирована!');
-}
-
-// Задания
-window.showTasks = function(){
-  showPage('tasks');
-  const tasksList = document.getElementById('tasks-list');
-  tasksList.innerHTML='';
-  get(tasksRef).then(snapshot=>{
-    snapshot.forEach(snap=>{
-      const task = snap.val();
-      const key = snap.key;
-      const div = document.createElement('div');
-      div.className='card';
-      div.innerHTML = `<b>${task.name}</b><p>${task.desc}</p><p>Цена: ${task.price}₽</p><button class="btn" onclick="openTask('${key}')">Открыть</button>`;
-      tasksList.appendChild(div);
+// Заработок на кликах
+window.tap = function(){
+  get(userRef).then(snap=>{
+    let data = snap.val();
+    if(data.energy<=0){alert("Энергия закончилась"); return;}
+    update(userRef,{
+      balance: +(data.balance+0.005).toFixed(3),
+      energy: data.energy-1
     });
   });
 }
 
-window.openTask = function(key){
-  showPage('task-detail');
-  get(ref(db,'tasks/'+key)).then(snapshot=>{
-    const task = snapshot.val();
-    document.getElementById('task-title').innerText = task.name;
-    document.getElementById('task-desc').innerText = task.desc;
-    document.getElementById('task-price').innerText = task.price+"₽";
-    document.getElementById('task-link').onclick = ()=>window.open(task.link,'_blank');
-    document.getElementById('submit-report').onclick = ()=>submitReport(key);
-  });
+// Рефералы
+window.showReferral = function(){
+  showPage('referral');
+  document.getElementById('ref-link').value = `https://t.me/DifferentEarningsBot?start=${userID}`;
+}
+window.copyReferral = function(){
+  const copyText = document.getElementById('ref-link');
+  copyText.select();
+  navigator.clipboard.writeText(copyText.value);
+  alert('Ссылка скопирована!');
 }
 
-window.submitReport = function(taskKey){
-  const report = document.getElementById('report-text').value;
-  if(report==''){alert('Введите отчет'); return;}
-  push(reportsRef,{
-    userID:userID,
-    taskKey:taskKey,
-    report:report,
-    status:'pending'
-  });
-  alert('Задание отправлено на проверку!');
-  showTasks();
+// Профиль
+onValue(userRef, snap=>{
+  const data = snap.val();
+  if(data) document.getElementById('user-id').innerText = userID;
+});
+
+// Админ
+if(userID==adminID){
+  document.getElementById('admin-btn').style.display='block';
 }
 
 </script>
 <style>
-body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;}
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px;height:80px;background:url('https://i.postimg.cc/dQ2QDSbQ/Picsart-26-01-03-04-31-27-278.png') center/cover no-repeat;}
+body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;background:url('https://i.postimg.cc/dQ2QDSbQ/Picsart-26-01-03-04-31-27-278.png') center/cover no-repeat;}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px;height:80px;background:rgba(0,0,0,0.5);}
 .title{font-size:36px;font-weight:bold;}
 .balance{cursor:pointer;}
 .page{display:none;padding:20px;height:calc(100% - 80px);}
@@ -164,7 +125,7 @@ body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;}
 <!-- Заработок -->
 <div id="earn" class="page active">
   <div class="card"><button class="btn" onclick="showReferral()">Заработок на рефералах</button></div>
-  <div class="card"><button class="btn" onclick="showTasks()">Заработок на заданиях</button></div>
+  <div class="card"><button class="btn">Заработок на заданиях</button></div>
   <div class="card"><button class="btn" onclick="showPage('clicker')">Заработок на кликах</button></div>
 </div>
 
@@ -175,24 +136,6 @@ body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;}
     <input id="ref-link" value="" readonly style="width:100%;padding:10px;border-radius:10px;text-align:center;">
     <button class="btn btn-red" onclick="copyReferral()">Скопировать</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-  </div>
-</div>
-
-<!-- Задания -->
-<div id="tasks" class="page">
-  <div id="tasks-list"></div>
-  <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-</div>
-
-<div id="task-detail" class="page">
-  <div class="card">
-    <h3 id="task-title"></h3>
-    <p id="task-desc"></p>
-    <p>Цена: <span id="task-price"></span></p>
-    <button class="btn" id="task-link">Перейти</button>
-    <textarea id="report-text" placeholder="Отправьте отчет" style="width:100%;height:80px;margin-top:10px;"></textarea>
-    <button class="btn btn-red" id="submit-report">Отправить отчет</button>
-    <button class="btn btn-red" onclick="showTasks()">Назад</button>
   </div>
 </div>
 
@@ -241,12 +184,6 @@ body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;}
   <button onclick="showPage('profile')">👤</button>
   <button onclick="showPage('info')">ℹ️</button>
 </div>
-
-<script>
-  if(userID == adminID){
-    document.getElementById('admin-btn').style.display='block';
-  }
-</script>
 
 </body>
 </html>
