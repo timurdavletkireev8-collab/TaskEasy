@@ -4,56 +4,20 @@
 <meta charset="UTF-8">
 <title>EASY MONEY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-    authDomain: "cash-1968a.firebaseapp.com",
-    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-    projectId: "cash-1968a",
-    storageBucket: "cash-1968a.appspot.com",
-    messagingSenderId: "234016139024",
-    appId: "1:234016139024:web:f11daa0328ff06173d2795",
-    measurementId: "G-MFEKWBVN21"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
-
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
-body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
-
-/* TOP */
-.top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:32px;font-weight:900;text-shadow: 2px 2px 6px black;}
-.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
-
-/* PAGES */
+*{box-sizing:border-box;}
+body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px;}
+.title{font-size:32px;font-weight:900;text-shadow:2px 2px 6px black;}
+.balance{background:rgba(0,0,0,.55);padding:10px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
-.page.active{display:block}
-
-/* CARDS */
+.page.active{display:block;}
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
-
-/* BUTTONS */
-.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
+.btn{width:100%;padding:16px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
 .btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
-
-/* INPUT */
-input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
-
-/* NAV */
 .nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
 .nav div{font-size:36px;opacity:.7;cursor:pointer;}
 .nav .active{opacity:1;}
-
-/* CLICK IMAGE */
 .click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
 </style>
 </head>
@@ -61,154 +25,113 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance" onclick="show('withdraw')">Баланс: <span id="balance">0</span>₽</div>
+  <div class="balance" onclick="showPage('withdraw')">Баланс: <span id="balance">0</span>₽</div>
 </div>
 
-<!-- ЗАРАБОТОК -->
+<!-- Заработок -->
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
-    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
-    <button class="btn" onclick="show('click')">Заработок на кликах</button>
+    <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="showPage('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="showPage('click')">Заработок на кликах</button>
   </div>
 </div>
 
-<!-- РЕФЕРАЛЫ -->
+<!-- Рефералы -->
 <div id="referral" class="page">
   <div class="card">
     <h3>Приглашайте друзей и зарабатывайте</h3>
     <p>1 друг = <b>10₽</b> + 200 энергии</p>
-    <p id="ref-link"></p>
+    <p id="ref-link">https://t.me/DifferentEarningsBot?start=123</p>
     <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- ЗАДАНИЯ -->
+<!-- Задания -->
 <div id="tasks" class="page">
   <div class="card">
     <h3>Задания</h3>
-    <div id="task-list"></div>
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+    <button class="btn" onclick="alert('Пример задания')">Задание 1</button>
+    <button class="btn" onclick="alert('Пример задания')">Задание 2</button>
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- КЛИКИ -->
+<!-- Кликер -->
 <div id="click" class="page">
   <div class="card">
     <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
     <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
     <p>Всего энергии: <span id="energy">1000</span>/1000</p>
-    <img class="click-img"
-      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
-      onclick="tap()">
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- ПРОФИЛЬ -->
+<!-- Профиль -->
 <div id="profile" class="page">
   <div class="card">
     <h3>Профиль</h3>
-    <p>ID: <span id="user-id">0</span></p>
+    <p>ID: <span id="user-id">123</span></p>
     <p>Выполненные задания: <span id="done-tasks">0</span></p>
     <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
     <h4>История начислений</h4>
     <div id="history"></div>
-    <button class="btn btn-red" onclick="show('withdraw')">Вывести</button>
+    <button class="btn btn-red" onclick="showPage('withdraw')">Вывести</button>
   </div>
 </div>
 
-<!-- ВЫВОД -->
+<!-- Вывод -->
 <div id="withdraw" class="page">
   <div class="card">
     <h3>Вывод средств</h3>
     <p>Здесь можно вывести баланс.</p>
-    <button class="btn btn-red" onclick="show('profile')">Назад</button>
+    <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
 
-<!-- ИНФОРМАЦИЯ -->
+<!-- Информация -->
 <div id="info" class="page">
   <div class="card">
     <h3>Информация</h3>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <div id="admin-btn-container"></div>
+    <button class="btn" onclick="alert('Новости')">Новости</button>
+    <button class="btn" onclick="alert('Поддержка')">Поддержка</button>
   </div>
 </div>
 
-<!-- NAV -->
+<!-- Навигация -->
 <div class="nav">
-  <div class="active" onclick="show('earn')">💰</div>
-  <div onclick="show('profile')">👤</div>
-  <div onclick="show('info')">ℹ️</div>
+  <div class="active" onclick="showPage('earn')">💰</div>
+  <div onclick="showPage('profile')">👤</div>
+  <div onclick="showPage('info')">ℹ️</div>
 </div>
 
-<script type="module">
-import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-let userID = tg.initDataUnsafe?.user?.id || 0;
-document.getElementById('user-id').innerText = userID;
-
-const db = getDatabase();
-
-// Создать запись пользователя если нет
-function initUser() {
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
-    }
-  });
-}
-initUser();
-
-// Обновление UI
-function updateUI(){
-  const userRef = ref(db,'users/'+userID);
-  onValue(userRef, snapshot=>{
-    const data = snapshot.val();
-    if(data){
-      document.getElementById("balance").innerText = data.balance.toFixed(2);
-      document.getElementById("energy").innerText = data.energy;
-      document.getElementById("done-tasks").innerText = data.doneTasks;
-      document.getElementById("failed-tasks").innerText = data.failedTasks;
-      const histDiv = document.getElementById("history");
-      histDiv.innerHTML = "";
-      data.history?.forEach(h=>{
-        const d = document.createElement("div");
-        d.innerText = h;
-        histDiv.prepend(d);
-      });
-      document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
-    }
-  });
-}
-updateUI();
-
-// Clicker
-function tap(){
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    const data = snapshot.val();
-    if(data.energy<=0){alert("Энергия закончилась"); return;}
-    update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
-  });
-}
-
-// Copy referral
-function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  navigator.clipboard.writeText(link);
-  alert("Скопировано!");
-}
-
-// Pages
-function show(id){
+<script>
+// Переключение страниц
+function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
+
+// Кликер
+let balance = 0;
+let energy = 1000;
+function tap(){
+  if(energy<=0){alert('Энергия закончилась'); return;}
+  balance += 0.005;
+  energy -=1;
+  document.getElementById('balance').innerText = balance.toFixed(2);
+  document.getElementById('energy').innerText = energy;
+}
+
+// Копирование ссылки
+function copyRef(){
+  const link = document.getElementById('ref-link').innerText;
+  navigator.clipboard.writeText(link);
+  alert('Скопировано!');
+}
 </script>
+
 </body>
 </html>
