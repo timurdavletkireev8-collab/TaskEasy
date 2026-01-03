@@ -193,21 +193,20 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 const tg = window.Telegram.WebApp;
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
-
 const db = getDatabase();
 
-// Создать пользователя если нет
-function initUser() {
+// Инициализация пользователя
+function initUser(){
   const userRef = ref(db,'users/'+userID);
   get(userRef).then(snapshot=>{
     if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
+      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0,taskStatus:{}});
     }
   });
 }
 initUser();
 
-// Обновление UI
+// Обновление UI и кнопок
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
   onValue(userRef, snapshot=>{
@@ -218,25 +217,21 @@ function updateUI(){
       document.getElementById("done-tasks").innerText = data.doneTasks;
       document.getElementById("failed-tasks").innerText = data.failedTasks;
       const histDiv = document.getElementById("history");
-      histDiv.innerHTML = "";
+      histDiv.innerHTML="";
       data.history?.forEach(h=>{
-        const d = document.createElement("div");
-        d.innerText = h;
-        histDiv.prepend(d);
+        const d = document.createElement("div"); d.innerText=h; histDiv.prepend(d);
       });
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
 
       // Админка
-      const adminID = 7020322752;
-      if(userID == adminID){
-        const adminContainer = document.getElementById('admin-btn-container');
-        if(!adminContainer.hasChildNodes()){
-          const btn = document.createElement('button');
-          btn.className='btn';
-          btn.innerText='Админка';
-          btn.onclick=()=>alert('Админка откроется здесь!');
-          adminContainer.appendChild(btn);
-        }
+      const adminID=7020322752;
+      const adminContainer=document.getElementById('admin-btn-container');
+      if(userID==adminID && !adminContainer.hasChildNodes()){
+        const btn=document.createElement('button');
+        btn.className='btn';
+        btn.innerText='Админка';
+        btn.onclick=()=>alert('Админка откроется здесь!');
+        adminContainer.appendChild(btn);
       }
     }
   });
@@ -257,31 +252,27 @@ function show(id){
 function tap(){
   const userRef = ref(db,'users/'+userID);
   get(userRef).then(snapshot=>{
-    const data = snapshot.val();
+    const data=snapshot.val();
     if(data.energy<=0){alert("Энергия закончилась"); return;}
     update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
   });
 }
 
 // Copy referral
-function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  navigator.clipboard.writeText(link);
-  alert("Скопировано!");
-}
+function copyRef(){navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`); alert("Скопировано!");}
 
 // Tasks
-const taskListDiv = document.getElementById("task-list");
+const taskListDiv=document.getElementById("task-list");
 function loadTasks(){
-  const tasksRef = ref(db,'tasks');
-  onValue(tasksRef, snapshot=>{
+  const tasksRef=ref(db,'tasks');
+  onValue(tasksRef,snapshot=>{
     taskListDiv.innerHTML="";
     snapshot.forEach(child=>{
-      const t = child.val();
-      const btn = document.createElement("div");
+      const t=child.val();
+      const btn=document.createElement("div");
       btn.className="btn";
-      btn.innerText = t.name;
-      btn.onclick = ()=>openTask(t,child.key);
+      btn.innerText=t.name;
+      btn.onclick=()=>openTask(t,child.key);
       taskListDiv.appendChild(btn);
     });
   });
@@ -290,29 +281,31 @@ loadTasks();
 
 let currentTaskID=null;
 function openTask(task,key){
-  currentTaskID = key;
-  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
+  currentTaskID=key;
+  const userRef=ref(db,'users/'+userID+'/taskStatus/'+key);
   get(userRef).then(snapshot=>{
     if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-    document.getElementById("task-title").innerText = task.name;
-    document.getElementById("task-desc").innerText = task.desc;
-    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
+    document.getElementById("task-title").innerText=task.name;
+    document.getElementById("task-desc").innerText=task.desc;
+    document.getElementById("task-link-btn").onclick=()=>window.open(task.link,"_blank");
     show('taskView');
   });
 }
-function showReport(){ show('report'); }
+function showReport(){show('report');}
 function sendReport(){
-  const reportText = document.getElementById("report-text").value;
+  const reportText=document.getElementById("report-text").value;
   if(!reportText){alert("Введите отчёт"); return;}
   const updates={};
   updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
+  updates[`tasks/${currentTaskID}/reports`]=push(ref(db,`tasks/${currentTaskID}/reports`)).key;
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
-function backToTasks(){ show('tasks'); }
+function backToTasks(){show('tasks');}
 
-// Hide loading
-window.addEventListener('load',()=>setTimeout(()=>document.getElementById('loading').style.display='none',800));
+// Скрываем загрузку после восстановления данных
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('loading').style.display='none',800);
+});
 </script>
 </body>
 </html>
