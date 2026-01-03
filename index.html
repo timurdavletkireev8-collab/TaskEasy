@@ -32,7 +32,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:48px;font-weight:900;text-shadow: 2px 2px 6px black;} /* уменьшено, но заметно */
+.title{font-size:48px;font-weight:900;text-shadow: 2px 2px 6px black;}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
@@ -168,18 +168,17 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 </div>
 
 <script type="module">
-// Firebase + Telegram user
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 const db = getDatabase();
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
 
-// Создать запись пользователя если нет
+// Создать пользователя
 function initUser() {
   const userRef = ref(db,'users/'+userID);
   get(userRef).then(snapshot=>{
     if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
+      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0,taskStatus:{}});
     }
   });
 }
