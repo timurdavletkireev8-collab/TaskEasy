@@ -21,86 +21,110 @@
   };
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-  window.db = db; // Делаем базу доступной
+  window.db = db;
 
   const tg = window.Telegram.WebApp;
   tg.expand();
+  window.tg = tg;
 
   let uid = tg.initDataUnsafe?.user?.id || 0;
   let balance = 0;
   let energy = 1000;
   const userRef = ref(db, "users/" + uid);
 
-  // Инициализация при загрузке модуля
+  // Элементы интерфейса
   document.getElementById("uid").innerText = uid;
   document.getElementById("refLink").innerText = "https://t.me/DifferentEarningsBot?start=" + uid;
   document.getElementById("profilePic").src = tg.initDataUnsafe?.user?.photo_url || "";
 
-  get(userRef).then(snapshot=>{
+  // Инициализация юзера
+  get(userRef).then(snapshot => {
     if(!snapshot.exists()){
-      set(userRef, {balance:0,energy:1000,referrals:0,doneTasks:0,history:[]});
+      set(userRef, {balance:0, energy:1000, referrals:0, doneTasks: []});
     }
   });
 
-  onValue(userRef, snapshot=>{
+  // Синхронизация данных
+  onValue(userRef, snapshot => {
     const data = snapshot.val();
     if(data){
       balance = data.balance || 0;
-      energy = data.energy || 1000;
+      energy = data.energy || 0;
       document.getElementById("balance").innerText = balance.toFixed(2);
       document.getElementById("energy").innerText = energy;
     }
   });
 
-  // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ КНОПОК ---
+  // --- ЗАГРУЗКА ЗАДАНИЙ ---
+  const tasksRef = ref(db, "tasks");
+  onValue(tasksRef, snapshot => {
+    const taskList = document.getElementById("task-list");
+    taskList.innerHTML = "";
+    const data = snapshot.val();
+    if(data) {
+      Object.keys(data).forEach(key => {
+        const task = data[key];
+        const div = document.createElement("div");
+        div.className = "card";
+        div.style.marginBottom = "10px";
+        div.innerHTML = `
+          <strong>${task.name}</strong><br>
+          <small>${task.desc}</small><br>
+          <button class="btn" style="margin-top:8px" onclick="doTask('${key}', '${task.link}', ${task.price})">
+            Выполнить (+${task.price}₽)
+          </button>
+        `;
+        taskList.appendChild(div);
+      });
+    } else {
+      taskList.innerText = "Заданий пока нет.";
+    }
+  });
 
+  // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ ---
   window.showPage = function(id) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-    const target = document.getElementById(id);
-    if(target) target.classList.add("active");
+    document.getElementById(id).classList.add("active");
   };
 
   window.nav = function(id, event) {
     document.querySelectorAll(".nav img").forEach(i => i.classList.remove("active"));
     showPage(id);
-    if(event && event.target) {
-        event.target.classList.add("active");
-    }
+    if(event) event.target.classList.add("active");
   };
 
   window.tap = function() {
-    if(energy <= 0) {
-        alert("Энергия закончилась"); 
-        return;
-    }
+    if(energy <= 0) { alert("Энергия на нуле!"); return; }
     energy--;
     balance += 0.005;
-    document.getElementById("balance").innerText = balance.toFixed(3);
-    document.getElementById("energy").innerText = energy;
-    update(userRef, {balance: balance, energy: energy});
+    update(userRef, {balance, energy});
+  };
+
+  window.doTask = function(taskId, link, price) {
+    tg.openLink(link);
+    // Простейшая проверка через задержку (можно усложнить)
+    setTimeout(() => {
+        balance += price;
+        update(userRef, {balance});
+        alert(`Задание выполнено! +${price}₽`);
+    }, 5000);
   };
 
   window.copyRef = function() {
-    const link = document.getElementById("refLink").innerText;
-    navigator.clipboard.writeText(link).then(() => {
-        alert("Ссылка скопирована");
-    });
+    navigator.clipboard.writeText(document.getElementById("refLink").innerText);
+    alert("Ссылка скопирована!");
   };
 
   window.sendWithdraw = function() {
     const card = document.getElementById("card").value;
     const sum = Number(document.getElementById("sumWithdraw").value);
-    if(!card || sum < 100) {
-        alert("Введите корректные данные (минимум 100₽)"); 
-        return;
-    }
-    if(sum > balance) {
-        alert("Недостаточно средств");
-        return;
-    }
-    const withdrawRef = push(ref(db, "withdrawals"));
-    set(withdrawRef, {uid: uid, card: card, sum: sum, status: "pending"});
-    alert("Заявка отправлена");
+    if(sum < 100 || !card) { alert("Минимум 100₽ и заполните карту"); return; }
+    if(sum > balance) { alert("Недостаточно средств"); return; }
+    
+    const wRef = push(ref(db, "withdrawals"));
+    set(wRef, {uid, card, sum, status: "pending"});
+    update(userRef, {balance: balance - sum});
+    alert("Заявка создана!");
     showPage('profile');
   };
 
@@ -109,74 +133,46 @@
     const desc = document.getElementById("adminTaskDesc").value;
     const link = document.getElementById("adminTaskLink").value;
     const price = Number(document.getElementById("adminTaskPrice").value);
-    if(!name || !desc || !link || !price) {
-        alert("Заполните все поля"); 
-        return;
-    }
-    const tRef = push(ref(db, "tasks"));
-    set(tRef, {name, desc, link, price});
-    alert("Задание добавлено");
+    if(!name || !price) return alert("Заполни поля");
+    
+    push(ref(db, "tasks"), {name, desc, link, price});
+    alert("Добавлено!");
   };
 
-  window.tg = tg;
-
-  // Admin Logic
-  const adminID = 7020322752;
-  if(uid === adminID){
-    const adminDiv = document.getElementById("admin-btn-container");
+  // Админ-панель
+  if(uid === 7020322752) {
+    const adminContainer = document.getElementById("admin-btn-container");
     const btn = document.createElement("button");
     btn.className = "btn";
-    btn.innerText = "Админка";
+    btn.innerText = "Управление заданиями";
     btn.onclick = () => showPage('admin');
-    adminDiv.appendChild(btn);
-
-    const adminPage = document.createElement("div");
-    adminPage.id = "admin";
-    adminPage.className = "page";
-    adminPage.innerHTML = `
-      <div class="card">
-        <h3>Админка</h3>
-        <div>
-          <h4>Добавить задание</h4>
-          <input id="adminTaskName" placeholder="Название" style="width:100%; margin-bottom:5px;">
-          <input id="adminTaskDesc" placeholder="Описание" style="width:100%; margin-bottom:5px;">
-          <input id="adminTaskLink" placeholder="Ссылка" style="width:100%; margin-bottom:5px;">
-          <input id="adminTaskPrice" placeholder="Цена" style="width:100%; margin-bottom:10px;">
-          <button class="btn" onclick="addTask()">Добавить</button>
-        </div>
-        <button class="btn btn-red" onclick="showPage('info')">Назад</button>
-      </div>`;
-    document.body.appendChild(adminPage);
+    adminContainer.appendChild(btn);
   }
 </script>
 
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;overflow:hidden;}
+html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;overflow:hidden}
 body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;}
 
-/* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
 .title{font-size:22px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.8);border-radius:16px;backdrop-filter:blur(6px);}
 .balance{padding:10px 14px;background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.8);border-radius:16px;cursor:pointer;}
 
-/* PAGE */
 .page{display:none;padding:20px;height:calc(100% - 150px);overflow-y:auto;}
 .page.active{display:block}
-.card{background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.8);border-radius:22px;padding:20px;margin-bottom:20px;}
-.btn{width:100%;padding:16px;margin-top:14px;font-size:16px;font-weight:600;color:white;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:18px;cursor:pointer;}
-.btn-red{background:rgba(255,0,0,0.35);}
-input{width:100%; padding:10px; margin-top:5px; border-radius:10px; border:none;}
+.card{background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.8);border-radius:22px;padding:20px;margin-bottom:20px;}
+.btn{width:100%;padding:16px;margin-top:14px;font-size:16px;font-weight:600;color:white;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.8);border-radius:18px;cursor:pointer;}
+.btn-red{background:rgba(255,0,0,0.3);}
+input{width:100%; padding:14px; margin-top:10px; border-radius:15px; border:1px solid white; background: rgba(0,0,0,0.3); color:white;}
 
-/* NAV */
-.nav{position:fixed;bottom:0;width:100%;height:90px;background:rgba(0,0,0,0.6);display:flex;justify-content:space-around;align-items:center;}
-.nav img{width:48px;height:48px;opacity:0.6;cursor:pointer;}
-.nav img.active{opacity:1;}
+.nav{position:fixed;bottom:0;width:100%;height:90px;background:rgba(0,0,0,0.8);display:flex;justify-content:space-around;align-items:center;}
+.nav img{width:48px;height:48px;opacity:0.5;cursor:pointer;transition:0.3s}
+.nav img.active{opacity:1;transform:scale(1.1)}
 
-/* CLICK */
-.click-img{width:200px;height:200px;margin:30px auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.9); transition: transform 0.1s;}
-.click-img:active{transform: scale(0.95);}
-.profile-pic{width:50px;height:50px;border-radius:50%;margin-bottom:10px; background:#ddd;}
+.click-img{width:220px;height:220px;margin:30px auto;display:block;border-radius:30px;border:4px solid white;box-shadow:0 0 20px rgba(255,255,255,0.3);transition:0.1s}
+.click-img:active{transform:scale(0.9)}
+.profile-pic{width:60px;height:60px;border-radius:50%;border:2px solid white;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -190,58 +186,52 @@ input{width:100%; padding:10px; margin-top:5px; border-radius:10px; border:none;
 
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
-    <button class="btn" onclick="showPage('tasks')">Заработок на заданиях</button>
-    <button class="btn" onclick="showPage('click')">Заработок на кликах</button>
+    <button class="btn" onclick="showPage('referral')">👫 Рефералы</button>
+    <button class="btn" onclick="showPage('tasks')">📋 Задания</button>
+    <button class="btn" onclick="showPage('click')">🖱️ Кликер</button>
   </div>
 </div>
 
 <div id="referral" class="page">
   <div class="card">
-    <h3>Приглашай друзей</h3>
-    <p>+10₽ и 200 энергии за каждого</p>
-    <p id="refLink" style="word-break: break-all; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px;"></p>
-    <button class="btn" onclick="copyRef()">Скопировать</button>
+    <h3>Реферальная система</h3>
+    <p>Твоя ссылка:</p>
+    <p id="refLink" style="word-break:break-all; font-size:12px; opacity:0.8"></p>
+    <button class="btn" onclick="copyRef()">Копировать</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
 <div id="tasks" class="page">
-  <div class="card">
-    <h3>Задания</h3>
-    <div id="task-list">Пока нет доступных заданий</div>
-    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-  </div>
+  <h3 style="margin-left:10px">Доступные задания</h3>
+  <div id="task-list"></div>
+  <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
 </div>
 
 <div id="click" class="page">
-  <div class="card">
-    <p>Каждый клик +0.005₽</p>
+  <div class="card" style="text-align:center">
     <p>Энергия: <span id="energy">1000</span>/1000</p>
-    <img class="click-img"
-      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
-      onclick="tap()">
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <p style="margin-top:20px">+0.005₽ за клик</p>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
 <div id="profile" class="page">
-  <div class="card">
+  <div class="card" style="text-align:center">
     <img id="profilePic" class="profile-pic" src="">
     <h3>Профиль</h3>
-    <p>ID: <span id="uid">0</span></p>
-    <div id="done-tasks-btns"></div>
-    <button class="btn btn-red" onclick="showPage('withdraw')">Вывести</button>
+    <p>Ваш ID: <span id="uid"></span></p>
+    <button class="btn" onclick="showPage('withdraw')">Вывести средства</button>
   </div>
 </div>
 
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>Вывод</h3>
-    <p>Укажи сумму и карту (от 100₽)</p>
-    <input type="text" id="card" placeholder="Номер карты">
-    <input type="number" id="sumWithdraw" placeholder="Сумма">
-    <button class="btn" onclick="sendWithdraw()">Отправить</button>
+    <h3>Вывод денег</h3>
+    <input type="text" id="card" placeholder="Номер карты или СБП">
+    <input type="number" id="sumWithdraw" placeholder="Сумма (от 100₽)">
+    <button class="btn" onclick="sendWithdraw()">Создать заявку</button>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
@@ -249,9 +239,21 @@ input{width:100%; padding:10px; margin-top:5px; border-radius:10px; border:none;
 <div id="info" class="page">
   <div class="card">
     <h3>Информация</h3>
-    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости</button>
-    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">📢 Канал с новостями</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">💬 Техподдержка</button>
     <div id="admin-btn-container"></div>
+  </div>
+</div>
+
+<div id="admin" class="page">
+  <div class="card">
+    <h3>Админ-панель</h3>
+    <input id="adminTaskName" placeholder="Название задания">
+    <input id="adminTaskDesc" placeholder="Описание">
+    <input id="adminTaskLink" placeholder="Ссылка (https://...)">
+    <input id="adminTaskPrice" type="number" placeholder="Награда (₽)">
+    <button class="btn" onclick="addTask()">Опубликовать</button>
+    <button class="btn btn-red" onclick="showPage('info')">Назад</button>
   </div>
 </div>
 
