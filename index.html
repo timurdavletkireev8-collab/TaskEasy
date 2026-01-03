@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
@@ -21,7 +20,6 @@
     appId: "1:234016139024:web:f11daa0328ff06173d2795",
     measurementId: "G-MFEKWBVN21"
   };
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 </script>
@@ -33,7 +31,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:36px;font-weight:900;text-shadow:0 0 10px rgba(255,255,255,.7);}
+.title{font-size:32px;font-weight:900;text-shadow: 2px 2px 6px black;}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
@@ -44,7 +42,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
 /* BUTTONS */
-.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:700;}
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
 .btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
 
 /* INPUT */
@@ -52,7 +50,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 /* NAV */
 .nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
-.nav div{font-size:32px;opacity:.5;cursor:pointer;}
+.nav div{font-size:36px;opacity:.7;cursor:pointer;}
 .nav .active{opacity:1;}
 
 /* CLICK IMAGE */
@@ -95,33 +93,12 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   </div>
 </div>
 
-<!-- КОНКРЕТНОЕ ЗАДАНИЕ -->
-<div id="taskView" class="page">
-  <div class="card">
-    <h3 id="task-title"></h3>
-    <p id="task-desc"></p>
-    <button class="btn" id="task-link-btn">Перейти по ссылке</button>
-    <button class="btn" onclick="showReport()">Отправить отчёт</button>
-    <button class="btn btn-red" onclick="backToTasks()">Назад</button>
-  </div>
-</div>
-
-<!-- ОТЧЁТ -->
-<div id="report" class="page">
-  <div class="card">
-    <h3>Отчёт</h3>
-    <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
-    <button class="btn" onclick="sendReport()">Отправить</button>
-    <button class="btn btn-red" onclick="show('taskView')">Назад</button>
-  </div>
-</div>
-
 <!-- КЛИКИ -->
 <div id="click" class="page">
   <div class="card">
     <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
     <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
-    <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
+    <p>Всего энергии: <span id="energy">1000</span>/1000</p>
     <img class="click-img"
       src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
       onclick="tap()">
@@ -171,7 +148,6 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 <script type="module">
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-// Telegram user
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
 
@@ -188,7 +164,7 @@ function initUser() {
 }
 initUser();
 
-// Обновление баланса и энергии
+// Обновление UI
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
   onValue(userRef, snapshot=>{
@@ -205,7 +181,6 @@ function updateUI(){
         d.innerText = h;
         histDiv.prepend(d);
       });
-      // реферал
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
     }
   });
@@ -233,53 +208,7 @@ function copyRef(){
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
-  if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
-  if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
-  if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
 }
-
-// Задания
-const taskListDiv = document.getElementById("task-list");
-function loadTasks(){
-  const tasksRef = ref(db,'tasks');
-  onValue(tasksRef, snapshot=>{
-    taskListDiv.innerHTML="";
-    snapshot.forEach(child=>{
-      const t = child.val();
-      const btn = document.createElement("div");
-      btn.className="btn";
-      btn.innerText = t.name;
-      btn.onclick = ()=>openTask(t,child.key);
-      taskListDiv.appendChild(btn);
-    });
-  });
-}
-loadTasks();
-
-let currentTaskID=null;
-function openTask(task,key){
-  currentTaskID = key;
-  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
-  get(userRef).then(snapshot=>{
-    if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-    document.getElementById("task-title").innerText = task.name;
-    document.getElementById("task-desc").innerText = task.desc;
-    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
-    show('taskView');
-  });
-}
-
-function showReport(){ show('report'); }
-function sendReport(){
-  const reportText = document.getElementById("report-text").value;
-  if(!reportText){alert("Введите отчёт"); return;}
-  const updates={};
-  updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; // добавить отчёт
-  update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
-}
-function backToTasks(){ show('tasks'); }
 </script>
 </body>
 </html>
