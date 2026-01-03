@@ -29,9 +29,15 @@
   let uid = tg.initDataUnsafe?.user?.id || 0;
   let balance = 0;
   let energy = 1000;
+  let userReports = {}; // Храним статусы отчетов пользователя
   const adminID = 7020322752;
 
   const userRef = ref(window.db, "users/" + uid);
+
+  // Скрытие загрузки через 2.5 секунды
+  setTimeout(() => {
+    document.getElementById("loader").style.display = "none";
+  }, 2500);
 
   // Синхронизация данных пользователя
   onValue(userRef, snapshot => {
@@ -41,12 +47,30 @@
       energy = data.energy || 1000;
       document.getElementById("balance").innerText = balance.toFixed(2);
       document.getElementById("energy").innerText = energy;
+      
+      // Визуальное состояние кликера
+      const img = document.querySelector(".click-img");
+      if(energy <= 0) { img.style.opacity = "0.4"; img.style.filter = "grayscale(1)"; }
+      else { img.style.opacity = "1"; img.style.filter = "none"; }
     } else {
       set(userRef, {balance:0, energy:1000, referrals:0, doneTasks:0});
     }
   });
 
-  // Загрузка списка заданий в раздел Tasks
+  // Получаем отчеты текущего пользователя для блокировки кнопок
+  onValue(ref(window.db, "reports"), s => {
+    userReports = {};
+    if(s.exists()){
+      s.forEach(child => {
+        const r = child.val();
+        if(r.uid === uid) {
+          userReports[r.taskId] = r.status;
+        }
+      });
+    }
+  });
+
+  // Загрузка списка заданий
   onValue(ref(window.db, "tasks"), s => {
     const list = document.getElementById("task-list");
     list.innerHTML = "";
@@ -56,14 +80,16 @@
         const div = document.createElement("div");
         div.className = "card";
         div.style.cursor = "pointer";
-        div.innerHTML = `<strong>${t.name}</strong> <span style="float:right">${t.price}₽</span>`;
+        const status = userReports[child.key];
+        const statusText = status === "pending" ? "⏳" : (status === "approved" ? "✅" : "");
+        div.innerHTML = `<strong>${t.name} ${statusText}</strong> <span style="float:right">${t.price}₽</span>`;
         div.onclick = () => openTaskDetails(child.key, t);
         list.appendChild(div);
       });
     }
   });
 
-  // Логика для админа
+  // Админ логика (отчеты, выводы, логи)
   if(uid === adminID) {
     onValue(ref(window.db, "reports"), s => {
       const cont = document.getElementById("admin-reports-list");
@@ -124,7 +150,7 @@
   };
 
   window.tap = function(){
-    if(energy<=0){alert("Энергия закончилась"); return;}
+    if(energy <= 0) return; // Больше нельзя тапать
     energy--;
     balance += 0.005;
     update(userRef, {balance: balance, energy: energy});
@@ -135,7 +161,24 @@
     document.getElementById("det-desc").innerText = task.desc;
     document.getElementById("det-price").innerText = task.price;
     document.getElementById("det-link-btn").onclick = () => window.tg.openLink(task.link);
-    document.getElementById("det-send-btn").onclick = () => sendTaskReport(id, task);
+    
+    const sendBtn = document.getElementById("det-send-btn");
+    const status = userReports[id];
+
+    if(status === "pending") {
+        sendBtn.innerText = "На проверке...";
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = "0.5";
+    } else if (status === "approved") {
+        sendBtn.innerText = "Выполнено ✅";
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = "0.5";
+    } else {
+        sendBtn.innerText = "Отправить отчет";
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = "1";
+        sendBtn.onclick = () => sendTaskReport(id, task);
+    }
     showPage('task-details');
   };
 
@@ -168,7 +211,7 @@
     push(ref(window.db, "logs"), {uid, msg, time: new Date().toLocaleTimeString(), isAdmin});
   };
 
-  // Админ-функции
+  // Админ-действия
   window.approveReport = function(id) {
     get(ref(window.db, `reports/${id}`)).then(s => {
         const r = s.val();
@@ -220,6 +263,11 @@
 html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;overflow:hidden;}
 body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;}
 
+/* LOADER */
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#111;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;}
+.loader-logo{width:120px;margin-bottom:20px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%{transform:scale(1);} 50%{transform:scale(1.1); opacity:0.8;} 100%{transform:scale(1);}}
+
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
 .title{font-size:22px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.8);border-radius:16px;backdrop-filter:blur(6px);}
 .balance{padding:10px 14px;background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.8);border-radius:16px;cursor:pointer;}
@@ -234,11 +282,16 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 .nav img{width:48px;height:48px;opacity:0.6;cursor:pointer;}
 .nav img.active{opacity:1;}
 
-.click-img{width:200px;height:200px;margin:30px auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.9);}
+.click-img{width:200px;height:200px;margin:30px auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.9); transition: 0.3s;}
 input, textarea{width:100%; padding:12px; margin-top:10px; border-radius:12px; border:1px solid white; background:rgba(0,0,0,0.3); color:white;}
 </style>
 </head>
 <body>
+
+<div id="loader">
+  <img class="loader-logo" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png">
+  <div style="font-weight:900; letter-spacing:2px;">EASY MONEY</div>
+</div>
 
 <div class="top">
   <div class="title">EASY MONEY</div>
@@ -364,12 +417,12 @@ input, textarea{width:100%; padding:12px; margin-top:10px; border-radius:12px; b
 </div>
 
 <script>
-    // Показ кнопки админа для конкретного ID
     setTimeout(()=>{
-        if(window.tg.initDataUnsafe?.user?.id === 7020322752){
-            document.getElementById("admin-entry").style.display = "block";
-            document.getElementById("uid").innerText = window.tg.initDataUnsafe?.user?.id;
-            document.getElementById("refLink").innerText = "https://t.me/DifferentEarningsBot?start=" + window.tg.initDataUnsafe?.user?.id;
+        const user = window.tg.initDataUnsafe?.user;
+        if(user){
+            document.getElementById("uid").innerText = user.id;
+            document.getElementById("refLink").innerText = "https://t.me/DifferentEarningsBot?start=" + user.id;
+            if(user.id === 7020322752) document.getElementById("admin-entry").style.display = "block";
         }
     }, 1500);
 </script>
