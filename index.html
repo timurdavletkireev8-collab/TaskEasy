@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EASY MONEY</title>
+<title>EASY MONEY - FULL RECOVERY</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
@@ -29,29 +29,26 @@
   let uid = tg.initDataUnsafe?.user?.id || 0;
   let balance = 0;
   let energy = 1000;
-  let userReports = {}; 
+  let userReports = {};
   const adminID = 7020322752;
 
   const userRef = ref(window.db, "users/" + uid);
 
-  // Скрытие загрузки
+  // ЛОАДЕР
   setTimeout(() => { document.getElementById("loader").style.display = "none"; }, 2500);
 
-  // Инициализация и Проверка Энергии (раз в 24 часа)
-  get(userRef).then(snapshot => {
+  // ЭНЕРГИЯ 24 ЧАСА
+  get(userRef).then(snap => {
     const now = Date.now();
-    if(snapshot.exists()){
-      const data = snapshot.val();
-      const lastReset = data.lastEnergyReset || 0;
-      if(now - lastReset > 86400000) { // 24 часа в мс
-        update(userRef, { energy: 1000, lastEnergyReset: now });
-      }
+    if(snap.exists()){
+      const d = snap.val();
+      if(now - (d.lastReset || 0) > 86400000) update(userRef, {energy: 1000, lastReset: now});
     } else {
-      set(userRef, {balance:0, energy:1000, lastEnergyReset: now, uid: uid});
+      set(userRef, {balance:0, energy:1000, lastReset: now, uid: uid});
     }
   });
 
-  // Синхронизация данных пользователя
+  // ОБНОВЛЕНИЕ ДАННЫХ
   onValue(userRef, snapshot => {
     const data = snapshot.val();
     if(data){
@@ -59,207 +56,168 @@
       energy = data.energy || 0;
       document.getElementById("balance").innerText = balance.toFixed(2);
       document.getElementById("energy").innerText = energy;
-      document.getElementById("uid_val").innerText = uid;
-      
-      const photo = tg.initDataUnsafe?.user?.photo_url;
-      if(photo) document.getElementById("profilePic").src = photo;
+      document.getElementById("uid").innerText = uid;
+      if(tg.initDataUnsafe?.user?.photo_url) document.getElementById("profilePic").src = tg.initDataUnsafe.user.photo_url;
       
       const img = document.querySelector(".click-img");
-      if(energy <= 0) { img.style.opacity = "0.4"; img.style.filter = "grayscale(1)"; }
-      else { img.style.opacity = "1"; img.style.filter = "none"; }
+      img.style.opacity = energy <= 0 ? "0.4" : "1";
     }
   });
 
-  // Загрузка отчетов (для блокировки и истории)
+  // ИСТОРИЯ И ОТЧЕТЫ
   onValue(ref(window.db, "reports"), s => {
     userReports = {};
-    const hEarned = document.getElementById("hist-earned");
-    const hDone = document.getElementById("hist-done");
-    const hBad = document.getElementById("hist-bad");
-    hEarned.innerHTML = ""; hDone.innerHTML = ""; hBad.innerHTML = "";
-
-    if(s.exists()){
-      s.forEach(child => {
-        const r = child.val();
-        if(r.uid === uid) {
-          userReports[r.taskId] = r.status;
-          const cardHtml = `<div class="card" style="margin-bottom:8px; padding:10px; font-size:14px;"><b>${r.taskName}</b><br>${r.price}₽</div>`;
-          if(r.status === "approved") { hEarned.innerHTML += cardHtml; hDone.innerHTML += cardHtml; }
-          if(r.status === "rejected") { hBad.innerHTML += cardHtml; }
-        }
-      });
-    }
+    const h1 = document.getElementById("h-earn"), h2 = document.getElementById("h-done"), h3 = document.getElementById("h-bad");
+    h1.innerHTML = h2.innerHTML = h3.innerHTML = "";
+    s.forEach(c => {
+      const r = c.val();
+      if(r.uid === uid) {
+        userReports[r.taskId] = r.status;
+        const html = `<div class="card" style="margin:5px 0; padding:10px;">${r.taskName} - ${r.price}₽</div>`;
+        if(r.status === "approved") { h1.innerHTML += html; h2.innerHTML += html; }
+        if(r.status === "rejected") h3.innerHTML += html;
+      }
+    });
   });
 
-  // Список заданий
+  // ЗАДАНИЯ
   onValue(ref(window.db, "tasks"), s => {
     const list = document.getElementById("task-list");
     list.innerHTML = "";
-    if(s.exists()){
-      s.forEach(child => {
-        const t = child.val();
-        const div = document.createElement("div");
-        div.className = "card";
-        div.style.cursor = "pointer";
-        const status = userReports[child.key] || "";
-        const icon = status === "pending" ? "⏳" : (status === "approved" ? "✅" : "");
-        div.innerHTML = `<strong>${t.name} ${icon}</strong> <span style="float:right">${t.price}₽</span>`;
-        div.onclick = () => openTaskDetails(child.key, t);
-        list.appendChild(div);
-      });
-    }
+    s.forEach(child => {
+      const t = child.val();
+      const div = document.createElement("div");
+      div.className = "card task-item";
+      const st = userReports[child.key] || "";
+      const icon = st === "pending" ? "⏳" : (st === "approved" ? "✅" : "");
+      div.innerHTML = `<span>${t.name} ${icon}</span> <b>${t.price}₽</b>`;
+      div.onclick = () => openTask(child.key, t);
+      list.appendChild(div);
+    });
   });
 
-  // Админка
+  // АДМИНКА
   if(uid === adminID) {
+    document.getElementById("admin-entry").style.display = "block";
     onValue(ref(window.db, "reports"), s => {
-      const cont = document.getElementById("admin-reports-list");
+      const cont = document.getElementById("adm-reports");
       cont.innerHTML = "";
       s.forEach(c => {
         const r = c.val();
         if(r.status === "pending") {
           const d = document.createElement("div");
           d.className = "card";
-          d.innerHTML = `ID: ${r.uid}<br>Задание: ${r.taskName}<br>Отчет: ${r.info}<br>
-            <button class="btn" style="background:green" onclick="approveReport('${c.key}')">Одобрить</button>
-            <button class="btn btn-red" onclick="rejectReport('${c.key}')">Отклонить</button>`;
+          d.innerHTML = `ID: ${r.uid}<br>Отчет: ${r.info}<br>
+            <button class="btn" style="background:green" onclick="approveTask('${c.key}')">Одобрить</button>
+            <button class="btn btn-red" onclick="rejectTask('${c.key}')">Отклонить</button>`;
           cont.appendChild(d);
         }
       });
     });
-
     onValue(ref(window.db, "logs"), s => {
-        const cont = document.getElementById("admin-logs-list");
+        const cont = document.getElementById("adm-logs");
         cont.innerHTML = "";
-        let logsArr = [];
-        s.forEach(c => logsArr.push(c.val()));
-        logsArr.reverse().slice(0, 50).forEach(l => {
-            const line = document.createElement("div");
-            line.style.fontSize = "11px"; line.style.borderBottom = "1px solid #444";
-            line.innerText = `[${l.time}] ID${l.uid}: ${l.msg}`;
-            cont.appendChild(line);
+        let logs = []; s.forEach(c => logs.push(c.val()));
+        logs.reverse().slice(0, 50).forEach(l => {
+            cont.innerHTML += `<div style="font-size:10px; border-bottom:1px solid #444; margin-bottom:2px;">[${l.time}] ${l.msg}</div>`;
         });
     });
   }
 
-  // Функционал
-  window.tap = function(){
-    if(energy <= 0) return;
-    energy--;
-    balance += 0.005;
-    update(userRef, {balance, energy});
-  };
-
-  window.showPage = function(id){
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  // ФУНКЦИИ
+  window.showPage = id => {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
   };
 
-  window.nav = function(id, event){
-    document.querySelectorAll(".nav img").forEach(i=>i.classList.remove("active"));
-    showPage(id);
-    if(event) event.target.classList.add("active");
+  window.tap = () => {
+    if(energy <= 0) return;
+    energy--; balance += 0.005;
+    update(userRef, {balance, energy});
   };
 
-  window.openTaskDetails = function(id, task) {
-    document.getElementById("det-title").innerText = task.name;
-    document.getElementById("det-desc").innerText = task.desc;
-    document.getElementById("det-price").innerText = task.price;
-    document.getElementById("det-link-btn").onclick = () => window.tg.openLink(task.link);
-    const sendBtn = document.getElementById("det-send-btn");
+  window.openTask = (id, task) => {
+    document.getElementById("t-name").innerText = task.name;
+    document.getElementById("t-desc").innerText = task.desc;
+    document.getElementById("t-price").innerText = task.price;
+    document.getElementById("t-link").onclick = () => window.tg.openLink(task.link);
+    const btn = document.getElementById("t-send");
     const st = userReports[id];
     if(st === "pending" || st === "approved") {
-        sendBtn.disabled = true; sendBtn.style.opacity = "0.5";
-        sendBtn.innerText = st === "pending" ? "На проверке..." : "Выполнено ✅";
+        btn.disabled = true; btn.style.opacity = "0.5";
+        btn.innerText = st === "pending" ? "На проверке..." : "Выполнено";
     } else {
-        sendBtn.disabled = false; sendBtn.style.opacity = "1";
-        sendBtn.innerText = "Отправить отчет";
-        sendBtn.onclick = () => sendTaskReport(id, task);
+        btn.disabled = false; btn.style.opacity = "1"; btn.innerText = "Отправить отчет";
+        btn.onclick = () => sendReport(id, task);
     }
-    showPage('task-details');
+    showPage('task-view');
   };
 
-  window.sendTaskReport = function(taskId, task) {
-    const info = document.getElementById("det-input").value;
-    if(!info) return alert("Введите данные для отчета!");
-    push(ref(window.db, "reports"), {uid, taskId, taskName: task.name, info, price: task.price, status: "pending"});
-    logAction(`Отправил отчет по заданию: ${task.name}`);
-    alert("Отправлено на проверку!");
+  window.sendReport = (id, task) => {
+    const info = document.getElementById("t-input").value;
+    if(!info) return alert("Введите отчет!");
+    push(ref(window.db, "reports"), {uid, taskId: id, taskName: task.name, info, price: task.price, status: "pending"});
+    logAction(`Юзер ${uid} отправил отчет: ${task.name}`);
     showPage('tasks');
   };
 
-  window.approveReport = function(id) {
+  window.approveTask = id => {
     get(ref(window.db, `reports/${id}`)).then(s => {
-        const r = s.val();
-        const uR = ref(window.db, `users/${r.uid}`);
-        get(uR).then(us => {
-            const currentBal = us.val().balance || 0;
-            update(uR, {balance: currentBal + r.price});
-            update(ref(window.db, `reports/${id}`), {status: "approved"});
-            logAction(`АДМИН ОДОБРИЛ задание юзера ${r.uid} (+${r.price}₽)`, true);
-        });
+      const r = s.val();
+      const uR = ref(window.db, `users/${r.uid}`);
+      get(uR).then(us => {
+        update(uR, {balance: (us.val().balance || 0) + r.price});
+        update(ref(window.db, `reports/${id}`), {status: "approved"});
+        logAction(`Админ ОДОБРИЛ задачу юзера ${r.uid} (+${r.price}₽)`, true);
+      });
     });
   };
 
-  window.rejectReport = function(id) {
-    get(ref(window.db, `reports/${id}`)).then(s => {
-        const r = s.val();
-        update(ref(window.db, `reports/${id}`), {status: "rejected"});
-        logAction(`АДМИН ОТКЛОНИЛ задание юзера ${r.uid}`, true);
-    });
+  window.rejectTask = id => {
+    update(ref(window.db, `reports/${id}`), {status: "rejected"});
+    logAction(`Админ ОТКЛОНИЛ задачу`, true);
   };
 
-  window.logAction = function(msg, isAdmin=false) {
-    push(ref(window.db, "logs"), {uid, msg, time: new Date().toLocaleString(), isAdmin});
+  window.logAction = (msg) => {
+    push(ref(window.db, "logs"), {uid, msg, time: new Date().toLocaleTimeString()});
   };
 
 </script>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;height:100vh;font-family:Arial,sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;overflow:hidden;}
-
-/* LOADER */
-#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#111;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;}
-.loader-logo{width:110px;animation:pulse 1.5s infinite;}
-@keyframes pulse{0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)}}
-
-.top{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;}
-.title{font-size:20px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.12);border:2px solid white;border-radius:14px;backdrop-filter:blur(5px);}
-.balance{padding:10px 14px;background:rgba(0,0,0,0.5);border:2px solid white;border-radius:14px;}
-
-.page{display:none;padding:20px;height:calc(100vh - 160px);overflow-y:auto;}
+body{margin:0;height:100vh;font-family:sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover;overflow:hidden;}
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.loader-logo{width:100px;animation:p 1.5s infinite;}
+@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.top{display:flex;justify-content:space-between;padding:15px;align-items:center;}
+.title{font-weight:900;border:1px solid white;padding:5px 10px;border-radius:10px;background:rgba(255,255,255,0.1);}
+.page{display:none;padding:20px;height:calc(100vh - 150px);overflow-y:auto;}
 .active{display:block}
-.card{background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.7);border-radius:20px;padding:18px;margin-bottom:15px;}
-.btn{width:100%;padding:15px;margin-top:10px;font-weight:bold;color:white;background:rgba(0,0,0,0.4);border:2px solid white;border-radius:15px;cursor:pointer;}
-.btn-red{background:rgba(255,0,0,0.25); border-color: rgba(255,255,255,0.5);}
-
-.nav{position:fixed;bottom:0;width:100%;height:85px;background:rgba(0,0,0,0.7);display:flex;justify-content:space-around;align-items:center;}
-.nav img{width:42px;opacity:0.6;}
+.card{background:rgba(0,0,0,0.5);border:1px solid white;border-radius:15px;padding:15px;margin-bottom:15px;}
+.btn{width:100%;padding:12px;margin-top:10px;background:rgba(0,0,0,0.4);border:1px solid white;color:white;border-radius:10px;font-weight:bold;cursor:pointer;}
+.btn-red{background:rgba(255,0,0,0.2);border-color:#ff5555;}
+.nav{position:fixed;bottom:0;width:100%;height:80px;background:rgba(0,0,0,0.8);display:flex;justify-content:space-around;align-items:center;}
+.nav img{width:35px;opacity:0.5;}
 .nav img.active{opacity:1;}
-
-.click-img{width:190px;margin:25px auto;display:block;border-radius:22px;border:3px solid white; transition: 0.2s;}
-input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:1px solid white;background:rgba(0,0,0,0.25);color:white;}
-.profile-pic{width:85px;height:85px;border-radius:50%;border:3px solid white;margin-bottom:10px;object-fit:cover;}
+.click-img{width:180px;margin:20px auto;display:block;border-radius:20px;border:2px solid white;}
+input, textarea{width:100%;padding:10px;margin-top:10px;background:rgba(0,0,0,0.3);border:1px solid white;color:white;border-radius:8px;}
 </style>
 </head>
 <body>
 
-<div id="loader">
-    <img class="loader-logo" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png">
-    <h2 style="letter-spacing:3px;">ЗАГРУЗКА</h2>
-</div>
+<div id="loader"><img class="loader-logo" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"></div>
 
 <div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance" onclick="showPage('withdraw')"><span id="balance">0.00</span>₽</div>
+  <div class="balance" onclick="showPage('withdraw')">Баланс: <span id="balance">0.00</span>₽</div>
 </div>
 
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="showPage('referral')">👫 Друзья и Рефералы</button>
-    <button class="btn" onclick="showPage('tasks')">📋 Список Заданий</button>
-    <button class="btn" onclick="showPage('click')">🖱️ Заработать на кликах</button>
+    <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="showPage('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="showPage('click')">Заработок на кликах</button>
   </div>
 </div>
 
@@ -272,100 +230,88 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:12px;borde
 </div>
 
 <div id="tasks" class="page">
-  <h3>Доступные задания</h3>
+  <h3>Задания</h3>
   <div id="task-list"></div>
   <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
 </div>
 
-<div id="task-details" class="page">
+<div id="task-view" class="page">
   <div class="card">
-    <h3 id="det-title"></h3>
-    <p id="det-desc"></p>
-    <p>Награда: <span id="det-price"></span>₽</p>
-    <button class="btn" id="det-link-btn" style="background:#0088cc">Перейти по ссылке</button>
-    <textarea id="det-input" placeholder="Введите отчет (например, никнейм)..."></textarea>
-    <button class="btn" id="det-send-btn" style="background:#28a745">Отправить отчет</button>
-    <button class="btn btn-red" onclick="showPage('tasks')">Отмена</button>
+    <h3 id="t-name"></h3>
+    <p id="t-desc"></p>
+    <p>Награда: <span id="t-price"></span>₽</p>
+    <button class="btn" id="t-link" style="background:#0088cc">Перейти</button>
+    <textarea id="t-input" placeholder="Отчет (ник, скрин и тд)"></textarea>
+    <button class="btn" id="t-send" style="background:green">Отправить отчет</button>
+    <button class="btn btn-red" onclick="showPage('tasks')">Назад</button>
   </div>
 </div>
 
 <div id="profile" class="page">
   <div class="card" style="text-align:center">
-    <img id="profilePic" class="profile-pic" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png">
-    <p>Ваш ID: <span id="uid_val"></span></p>
-    <button class="btn" onclick="showPage('h-1')">💰 История начислений</button>
-    <button class="btn" onclick="showPage('h-2')">✅ Выполненные задания</button>
-    <button class="btn" onclick="showPage('h-3')">❌ Отклонённые задания</button>
-    <button class="btn btn-red" onclick="showPage('withdraw')" style="margin-top:20px;">Вывести средства</button>
+    <img id="profilePic" src="https://via.placeholder.com/80" style="width:80px; border-radius:50%; margin-bottom:10px;">
+    <p>ID: <span id="uid"></span></p>
+    <button class="btn" onclick="showPage('h1')">💰 Начисления</button>
+    <button class="btn" onclick="showPage('h2')">✅ Выполненные</button>
+    <button class="btn" onclick="showPage('h3')">❌ Отклонённые</button>
+    <button class="btn btn-red" onclick="showPage('withdraw')">Вывести</button>
   </div>
 </div>
 
-<div id="h-1" class="page"><h3>Начисления</h3><div id="hist-earned"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
-<div id="h-2" class="page"><h3>Выполненные</h3><div id="hist-done"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
-<div id="h-3" class="page"><h3>Отклонённые</h3><div id="hist-bad"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
+<div id="h1" class="page"><h3>Начисления</h3><div id="h-earn"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
+<div id="h2" class="page"><h3>Выполненные</h3><div id="h-done"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
+<div id="h3" class="page"><h3>Отклонённые</h3><div id="h-bad"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
 
 <div id="referral" class="page">
   <div class="card">
-    <h3>Реферальная программа</h3>
-    <p>Приглашайте друзей и получайте бонусы!</p>
-    <button class="btn" onclick="alert('Ссылка скопирована!')">Копировать ссылку</button>
+    <h3>Рефералы</h3>
+    <p>Тут ваша ссылка (автоматически):</p>
+    <button class="btn" onclick="alert('Скопировано')">Копировать</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>Вывод денег</h3>
-    <input id="card" placeholder="Номер карты или СБП">
-    <input id="sum" type="number" placeholder="Сумма (от 100₽)">
-    <button class="btn" onclick="alert('Заявка создана!')">Создать заявку</button>
+    <h3>Вывод</h3>
+    <input placeholder="Карта">
+    <input type="number" placeholder="Сумма">
+    <button class="btn">Вывести</button>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
 
 <div id="info" class="page">
   <div class="card">
-    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Канал с новостями</button>
-    <div id="adm-btn-box">
-        <script>
-            setTimeout(() => {
-                if(window.tg.initDataUnsafe?.user?.id === 7020322752) {
-                    const b = document.createElement("button");
-                    b.className = "btn"; b.style.background = "orange"; b.style.color = "black";
-                    b.innerText = "АДМИН-ПАНЕЛЬ";
-                    b.onclick = () => showPage('admin-main');
-                    document.getElementById("adm-btn-box").appendChild(b);
-                }
-            }, 2000);
-        </script>
+    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <div id="admin-entry" style="display:none">
+        <button class="btn" style="background:orange; color:black" onclick="showPage('admin-m')">АДМИНКА</button>
     </div>
   </div>
 </div>
 
-<div id="admin-main" class="page">
-    <button class="btn" onclick="showPage('admin-reports')">🔎 Проверить отчеты</button>
-    <button class="btn" onclick="showPage('admin-logs')">📜 Логи действий</button>
+<div id="admin-m" class="page">
+    <button class="btn" onclick="showPage('adm-r')">Проверка отчетов</button>
+    <button class="btn" onclick="showPage('adm-l')">Логи действий</button>
     <button class="btn btn-red" onclick="showPage('info')">Назад</button>
 </div>
 
-<div id="admin-reports" class="page">
-    <h3>Задания на проверке</h3>
-    <div id="admin-reports-list"></div>
-    <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
-</div>
-
-<div id="admin-logs" class="page">
-    <h3>Журнал событий</h3>
-    <div id="admin-logs-list" class="card"></div>
-    <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
-</div>
+<div id="adm-r" class="page"><div id="adm-reports"></div><button class="btn btn-red" onclick="showPage('admin-m')">Назад</button></div>
+<div id="adm-l" class="page"><div id="adm-logs" class="card"></div><button class="btn btn-red" onclick="showPage('admin-m')">Назад</button></div>
 
 <div class="nav">
-  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', event)" class="active">
-  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile', event)">
-  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info', event)">
+  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', this)" class="active">
+  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile', this)">
+  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info', this)">
 </div>
+
+<script>
+    function nav(id, el) {
+        document.querySelectorAll(".nav img").forEach(i => i.classList.remove("active"));
+        el.classList.add("active");
+        showPage(id);
+    }
+</script>
 
 </body>
 </html>
-
