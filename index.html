@@ -6,25 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-    authDomain: "cash-1968a.firebaseapp.com",
-    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-    projectId: "cash-1968a",
-    storageBucket: "cash-1968a.appspot.com",
-    messagingSenderId: "234016139024",
-    appId: "1:234016139024:web:f11daa0328ff06173d2795",
-    measurementId: "G-MFEKWBVN21"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
-
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
@@ -162,123 +143,64 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <!-- NAV -->
 <div class="nav">
-  <div class="active" onclick="show('earn')">💰</div>
-  <div onclick="show('profile')">👤</div>
-  <div onclick="show('info')">ℹ️</div>
+  <div onclick="showPage('earn', this)">💰</div>
+  <div onclick="showPage('profile', this)">👤</div>
+  <div onclick="showPage('info', this)">ℹ️</div>
 </div>
 
-<script type="module">
-import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+<script>
+const tg = window.Telegram.WebApp;
 
-// Telegram user
-let userID = tg.initDataUnsafe?.user?.id || 0;
-document.getElementById('user-id').innerText = userID;
-
-const db = getDatabase();
-
-// Создать запись пользователя если нет
-function initUser() {
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
-    }
-  });
-}
-initUser();
-
-// Обновление баланса и энергии
-function updateUI(){
-  const userRef = ref(db,'users/'+userID);
-  onValue(userRef, snapshot=>{
-    const data = snapshot.val();
-    if(data){
-      document.getElementById("balance").innerText = data.balance.toFixed(2);
-      document.getElementById("energy").innerText = data.energy;
-      document.getElementById("done-tasks").innerText = data.doneTasks;
-      document.getElementById("failed-tasks").innerText = data.failedTasks;
-      const histDiv = document.getElementById("history");
-      histDiv.innerHTML = "";
-      data.history?.forEach(h=>{
-        const d = document.createElement("div");
-        d.innerText = h;
-        histDiv.prepend(d);
-      });
-      // реферал
-      document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
-    }
-  });
-}
-updateUI();
-
-// Clicker
-function tap(){
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    const data = snapshot.val();
-    if(data.energy<=0){alert("Энергия закончилась"); return;}
-    update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
-  });
-}
-
-// Copy referral
-function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  navigator.clipboard.writeText(link);
-  alert("Скопировано!");
-}
-
-// Pages
-function show(id){
+// Навигация снизу
+function showPage(id, elem){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
-  if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
-  else if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
-  else if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
+  elem.classList.add('active');
 }
 
-// Задания
+// Инициализация юзера
+let userID = tg.initDataUnsafe?.user?.id || 0;
+document.getElementById('user-id').innerText = userID;
+let balance = 0, energy=1000;
+
+// Баланс
+document.getElementById('balance').onclick = ()=>showPage('withdraw', document.querySelector('.nav div:nth-child(1)'));
+
+// Clicker
+function tap(){
+  if(energy<=0){alert("Энергия закончилась"); return;}
+  energy--;
+  balance += 0.005;
+  document.getElementById('balance').innerText = balance.toFixed(3);
+  document.getElementById('energy').innerText = energy;
+}
+
+// Рефералы
+document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
+function copyRef(){
+  navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`);
+  alert("Скопировано!");
+}
+
+// Задания пример
+const tasks = [{name:"Пример задания",desc:"Описание задания",link:"https://t.me"}];
 const taskListDiv = document.getElementById("task-list");
-function loadTasks(){
-  const tasksRef = ref(db,'tasks');
-  onValue(tasksRef, snapshot=>{
-    taskListDiv.innerHTML="";
-    snapshot.forEach(child=>{
-      const t = child.val();
-      const btn = document.createElement("div");
-      btn.className="btn";
-      btn.innerText = t.name;
-      btn.onclick = ()=>openTask(t,child.key);
-      taskListDiv.appendChild(btn);
-    });
-  });
-}
-loadTasks();
+tasks.forEach((t,i)=>{
+  const btn = document.createElement("div");
+  btn.className="btn";
+  btn.innerText = t.name;
+  btn.onclick = ()=>{
+    document.getElementById("task-title").innerText = t.name;
+    document.getElementById("task-desc").innerText = t.desc;
+    document.getElementById("task-link-btn").onclick = ()=>window.open(t.link,"_blank");
+    showPage('taskView', document.querySelector('.nav div:nth-child(1)'));
+  };
+  taskListDiv.appendChild(btn);
+});
 
-let currentTaskID=null;
-function openTask(task,key){
-  currentTaskID = key;
-  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
-  get(userRef).then(snapshot=>{
-    if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-    document.getElementById("task-title").innerText = task.name;
-    document.getElementById("task-desc").innerText = task.desc;
-    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
-    show('taskView');
-  });
-}
-
-function showReport(){ show('report'); }
-function sendReport(){
-  const reportText = document.getElementById("report-text").value;
-  if(!reportText){alert("Введите отчёт"); return;}
-  const updates={};
-  updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
-  update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
-}
-function backToTasks(){ show('tasks'); }
+function showReport(){ showPage('report', document.querySelector('.nav div:nth-child(1)')); }
+function backToTasks(){ showPage('tasks', document.querySelector('.nav div:nth-child(1)')); }
 </script>
 </body>
 </html>
