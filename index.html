@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EASY MONEY - FULL REF UPDATE</title>
+<title>EASY MONEY - 10% REF SYSTEM</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
@@ -36,19 +36,13 @@
 
   setTimeout(() => { document.getElementById("loader").style.display = "none"; }, 2500);
 
-  // ИНИЦИАЛИЗАЦИЯ И ЭНЕРГИЯ 24ч
+  // Инициализация
   get(userRef).then(snap => {
     const now = Date.now();
     const startParam = tg.initDataUnsafe?.start_param;
 
     if(!snap.exists()){
-      let userData = {
-        balance: 0,
-        energy: 1000,
-        lastEnergyReset: now,
-        uid: uid,
-        refCompleted: false // Флаг: выполнил ли юзер первое задание
-      };
+      let userData = { balance: 0, energy: 1000, lastEnergyReset: now, uid: uid };
       if(startParam && startParam != uid) userData.referrer = startParam;
       set(userRef, userData);
     } else {
@@ -59,7 +53,7 @@
     }
   });
 
-  // ОБНОВЛЕНИЕ ДАННЫХ В РЕАЛЬНОМ ВРЕМЕНИ
+  // Синхронизация данных
   onValue(userRef, s => {
     const d = s.val();
     if(d){
@@ -74,7 +68,7 @@
     }
   });
 
-  // ИСТОРИЯ И ЗАДАНИЯ
+  // История и Задания
   onValue(ref(window.db, "reports"), s => {
     userReports = {};
     const h1 = document.getElementById("hist-money"), h2 = document.getElementById("hist-done"), h3 = document.getElementById("hist-bad");
@@ -96,16 +90,15 @@
     s.forEach(c => {
       const t = c.val();
       const st = userReports[c.key] || "";
-      const icon = st === "pending" ? "⏳" : (st === "approved" ? "✅" : "");
       const d = document.createElement("div");
       d.className = "card";
-      d.innerHTML = `<strong>${t.name} ${icon}</strong> <span style="float:right">${t.price}₽</span>`;
+      d.innerHTML = `<strong>${t.name}</strong> <span style="float:right">${t.price}₽</span>`;
       d.onclick = () => openTaskDetails(c.key, t);
       list.appendChild(d);
     });
   });
 
-  // АДМИНКА (ПОЛНЫЙ ФУНКЦИОНАЛ)
+  // Админка
   if(uid === adminID) {
     document.getElementById("admin-entry").style.display = "block";
     onValue(ref(window.db, "reports"), s => {
@@ -114,24 +107,9 @@
       s.forEach(c => {
         const r = c.val();
         if(r.status === "pending") {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `Юзер: ${r.uid}<br>Задание: ${r.taskName}<br>Отчет: ${r.info}<br>
+          cont.innerHTML += `<div class="card">Юзер: ${r.uid}<br>Задание: ${r.taskName}<br>
             <button class="btn" style="background:green" onclick="approveReport('${c.key}')">Одобрить</button>
-            <button class="btn btn-red" onclick="rejectReport('${c.key}')">Отклонить</button>`;
-          cont.appendChild(div);
-        }
-      });
-    });
-
-    onValue(ref(window.db, "withdrawals"), s => {
-      const cont = document.getElementById("admin-withdraw-list");
-      cont.innerHTML = "";
-      s.forEach(c => {
-        const w = c.val();
-        if(w.status === "pending") {
-          cont.innerHTML += `<div class="card">ID: ${w.uid}<br>Карта: ${w.card}<br>Сумма: ${w.sum}₽<br>
-            <button class="btn" style="background:green" onclick="approveWithdraw('${c.key}')">Выплачено</button></div>`;
+            <button class="btn btn-red" onclick="rejectReport('${c.key}')">Отклонить</button></div>`;
         }
       });
     });
@@ -146,7 +124,6 @@
     });
   }
 
-  // ФУНКЦИИ ОКНО
   window.showPage = id => {
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -169,15 +146,6 @@
     document.getElementById("det-desc").innerText = task.desc;
     document.getElementById("det-price").innerText = task.price;
     document.getElementById("det-link-btn").onclick = () => window.tg.openLink(task.link);
-    const btn = document.getElementById("det-send-btn");
-    const st = userReports[id];
-    if(st === "pending" || st === "approved") {
-        btn.disabled = true; btn.style.opacity = "0.5";
-        btn.innerText = st === "pending" ? "На проверке..." : "Выполнено";
-    } else {
-        btn.disabled = false; btn.style.opacity = "1"; btn.innerText = "Отправить отчет";
-        btn.onclick = () => sendTaskReport(id, task);
-    }
     showPage('task-details');
   };
 
@@ -185,21 +153,10 @@
     const info = document.getElementById("det-input").value;
     if(!info) return alert("Введите отчет!");
     push(ref(window.db, "reports"), {uid, taskId, taskName: task.name, info, price: task.price, status: "pending"});
-    logAction(`Отправил отчет по заданию: ${task.name}`);
     showPage('tasks');
   };
 
-  window.sendWithdraw = () => {
-    const card = document.getElementById("card").value;
-    const sum = Number(document.getElementById("sumWithdraw").value);
-    if(sum < 100 || sum > balance) return alert("Ошибка суммы");
-    update(userRef, {balance: balance - sum});
-    push(ref(window.db, "withdrawals"), {uid, card, sum, status: "pending"});
-    logAction(`Запрос на вывод: ${sum}₽`);
-    showPage('profile');
-  };
-
-  // ЛОГИКА ОДОБРЕНИЯ + РЕФЕРАЛЫ
+  // ОДОБРЕНИЕ С 10% РЕФЕРАЛЬНЫМИ
   window.approveReport = (reportId) => {
     get(ref(window.db, `reports/${reportId}`)).then(s => {
       const r = s.val();
@@ -207,23 +164,19 @@
       get(targetUserRef).then(usnap => {
         const uData = usnap.val();
         
-        // Начисляем юзеру за задание
+        // Начисляем юзеру
         update(targetUserRef, {balance: (uData.balance || 0) + r.price});
         update(ref(window.db, `reports/${reportId}`), {status: "approved"});
-        logAction(`Админ ОДОБРИЛ задание ${r.uid} (+${r.price}₽)`);
+        logAction(`Одобрено задание юзеру ${r.uid} (+${r.price}₽)`);
 
-        // ПРОВЕРКА РЕФЕРАЛА (Только после 1-го задания)
-        if(uData.referrer && uData.refCompleted === false) {
+        // Реферальные 10%
+        if(uData.referrer) {
           const bossRef = ref(window.db, `users/${uData.referrer}`);
           get(bossRef).then(bsnap => {
             if(bsnap.exists()){
-              const bossData = bsnap.val();
-              update(bossRef, {
-                balance: (bossData.balance || 0) + 10,
-                energy: (bossData.energy || 0) + 200
-              });
-              update(targetUserRef, {refCompleted: true});
-              push(ref(window.db, "logs"), {uid: 0, msg: `БОНУС: Юзер ${uData.referrer} получил 10₽ за рефа ${r.uid}`, time: new Date().toLocaleTimeString()});
+              const bonus = r.price * 0.1; // 10%
+              update(bossRef, { balance: (bsnap.val().balance || 0) + bonus });
+              logAction(`Реф. бонус ${bonus.toFixed(2)}₽ юзеру ${uData.referrer}`);
             }
           });
         }
@@ -233,21 +186,7 @@
 
   window.rejectReport = (id) => {
     update(ref(window.db, `reports/${id}`), {status: "rejected"});
-    logAction(`Админ ОТКЛОНИЛ задание`);
-  };
-
-  window.approveWithdraw = (id) => {
-    update(ref(window.db, `withdrawals/${id}`), {status: "done"});
-    logAction(`Админ ПОДТВЕРДИЛ выплату`);
-  };
-
-  window.addTask = () => {
-    const name = document.getElementById("adminTaskName").value;
-    const price = Number(document.getElementById("adminTaskPrice").value);
-    const desc = document.getElementById("adminTaskDesc").value;
-    const link = document.getElementById("adminTaskLink").value;
-    push(ref(window.db,"tasks"), {name, price, desc, link});
-    alert("Добавлено!");
+    logAction(`Отклонено задание`);
   };
 
   window.logAction = (msg) => {
@@ -274,7 +213,6 @@ body{margin:0;height:100vh;font-family:Arial,sans-serif;color:white;background:u
 .nav img.active{opacity:1;}
 .click-img{width:190px;margin:20px auto;display:block;border-radius:22px;border:2px solid white;}
 input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid white;background:rgba(0,0,0,0.3);color:white;}
-.profile-pic{width:85px;height:85px;border-radius:50%;border:2px solid white;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -288,9 +226,9 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
 
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="showPage('referral')">👫 Заработок на рефералах</button>
-    <button class="btn" onclick="showPage('tasks')">📋 Заработок на заданиях</button>
-    <button class="btn" onclick="showPage('click')">🖱️ Заработок на кликах</button>
+    <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="showPage('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="showPage('click')">Заработок на кликах</button>
   </div>
 </div>
 
@@ -301,8 +239,8 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
     <h3 id="det-title"></h3><p id="det-desc"></p>
     <p>Награда: <span id="det-price"></span>₽</p>
     <button class="btn" id="det-link-btn" style="background:#0088cc">Перейти</button>
-    <textarea id="det-input" placeholder="Отчет (ник, скрин и т.д.)"></textarea>
-    <button class="btn" id="det-send-btn" style="background:green">Отправить отчет</button>
+    <textarea id="det-input" placeholder="Отчет"></textarea>
+    <button class="btn" id="det-send-btn">Отправить отчет</button>
     <button class="btn btn-red" onclick="showPage('tasks')">Назад</button>
   </div>
 </div>
@@ -317,12 +255,12 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
 
 <div id="profile" class="page">
   <div class="card" style="text-align:center">
-    <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/85">
+    <img id="profilePic" src="" style="width:80px; height:80px; border-radius:50%; border:2px solid white; margin-bottom:10px;">
     <p>ID: <span id="uid_display">0</span></p>
-    <button class="btn" onclick="showPage('p-money')">💰 История начислений</button>
-    <button class="btn" onclick="showPage('p-done')">✅ Выполненные задания</button>
-    <button class="btn" onclick="showPage('p-bad')">❌ Отклонённые задания</button>
-    <button class="btn btn-red" onclick="showPage('withdraw')" style="margin-top:20px;">Вывести</button>
+    <button class="btn" onclick="showPage('p-money')">История начислений</button>
+    <button class="btn" onclick="showPage('p-done')">Выполненные задания</button>
+    <button class="btn" onclick="showPage('p-bad')">Отклонённые задания</button>
+    <button class="btn btn-red" onclick="showPage('withdraw')" style="margin-top:15px;">Вывести</button>
   </div>
 </div>
 
@@ -332,51 +270,45 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
 
 <div id="referral" class="page">
   <div class="card">
-    <h3>👫 Рефералы</h3>
-    <p style="font-size:14px; color:#ffcc00; font-weight:bold;">Получайте по 10₽ + 200 энергии за каждого приглашённого пользователя (пользователь засчитается после выполнения ОДНОГО задания!)</p>
-    <p id="refLink" style="font-size:11px; word-break:break-all; background:rgba(255,255,255,0.1); padding:10px; border-radius:5px;"></p>
-    <button class="btn" onclick="alert('Ссылка скопирована!')">Копировать ссылку</button>
+    <h3>Рефералы</h3>
+    <p style="font-size:14px; color:#ffcc00;">Получайте 10% от заработка каждого приглашённого пользователя!</p>
+    <p id="refLink" style="font-size:11px; word-break:break-all;"></p>
+    <button class="btn" onclick="alert('Скопировано')">Копировать ссылку</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>💸 Вывод средств</h3>
-    <input id="card" placeholder="Номер карты или СБП">
-    <input id="sumWithdraw" type="number" placeholder="Сумма (от 100₽)">
-    <button class="btn" onclick="sendWithdraw()">Создать заявку</button>
+    <h3>Вывод</h3>
+    <input id="card" placeholder="Номер карты"><input id="sumWithdraw" type="number" placeholder="Сумма">
+    <button class="btn" onclick="alert('Заявка создана')">Отправить</button>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
 
 <div id="info" class="page">
   <div class="card">
-    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости канала</button>
+    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости</button>
     <div id="admin-entry" style="display:none">
-        <button class="btn" style="background:orange; color:black; margin-top:20px;" onclick="showPage('admin-main')">⚙️ АДМИН-ПАНЕЛЬ</button>
+        <button class="btn" style="background:orange; color:black; margin-top:20px;" onclick="showPage('admin-main')">Админ-панель</button>
     </div>
   </div>
 </div>
 
 <div id="admin-main" class="page">
-    <button class="btn" onclick="showPage('admin-tasks')">➕ Добавить задание</button>
-    <button class="btn" onclick="showPage('admin-reports')">🔍 Проверка отчетов</button>
-    <button class="btn" onclick="showPage('admin-withdraws')">💸 Выплаты</button>
-    <button class="btn" onclick="showPage('admin-logs')">📜 Логи системы</button>
+    <button class="btn" onclick="showPage('admin-tasks')">Добавить задание</button>
+    <button class="btn" onclick="showPage('admin-reports')">Проверка отчетов</button>
+    <button class="btn" onclick="showPage('admin-logs')">Логи системы</button>
     <button class="btn btn-red" onclick="showPage('info')">Назад</button>
 </div>
 
 <div id="admin-tasks" class="page">
-    <div class="card">
-        <input id="adminTaskName" placeholder="Название"><input id="adminTaskPrice" type="number" placeholder="Цена">
-        <textarea id="adminTaskDesc" placeholder="Описание"></textarea><input id="adminTaskLink" placeholder="Ссылка">
-        <button class="btn" onclick="addTask()">Добавить</button>
-        <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
-    </div>
+    <input id="adminTaskName" placeholder="Название"><input id="adminTaskPrice" type="number" placeholder="Цена">
+    <textarea id="adminTaskDesc" placeholder="Описание"></textarea><input id="adminTaskLink" placeholder="Ссылка">
+    <button class="btn" onclick="addTask()">Создать</button>
 </div>
 <div id="admin-reports" class="page"><div id="admin-reports-list"></div><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
-<div id="admin-withdraws" class="page"><div id="admin-withdraw-list"></div><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
 <div id="admin-logs" class="page"><div id="admin-logs-list" class="card"></div><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
 
 <div class="nav">
