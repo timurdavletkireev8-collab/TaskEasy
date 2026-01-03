@@ -8,22 +8,21 @@
 
 <!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-  authDomain: "cash-1968a.firebaseapp.com",
-  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-  projectId: "cash-1968a",
-  storageBucket: "cash-1968a.appspot.com",
-  messagingSenderId: "234016139024",
-  appId: "1:234016139024:web:f11daa0328ff06173d2795",
-  measurementId: "G-MFEKWBVN21"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+    authDomain: "cash-1968a.firebaseapp.com",
+    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+    projectId: "cash-1968a",
+    storageBucket: "cash-1968a.appspot.com",
+    messagingSenderId: "234016139024",
+    appId: "1:234016139024:web:f11daa0328ff06173d2795",
+    measurementId: "G-MFEKWBVN21"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 </script>
 
 <style>
@@ -33,20 +32,8 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{
-  font-size:72px;
-  font-weight:900;
-  line-height:1.1;
-  color:rgba(255,255,255,0.85);
-  text-shadow: 0 0 20px rgba(255,255,255,0.6);
-}
-.balance{
-  background:rgba(0,0,0,.55);
-  padding:12px 18px;
-  border-radius:16px;
-  border:2px solid rgba(255,255,255,.8);
-  cursor:pointer;
-}
+.title{font-size:72px;font-weight:900;line-height:1.1;text-shadow:2px 2px 6px rgba(0,0,0,0.7);}
+.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
@@ -56,18 +43,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
 /* BUTTONS */
-.btn{
-  width:100%;
-  padding:18px;
-  margin-top:16px;
-  font-size:18px;
-  border-radius:18px;
-  color:white;
-  background:rgba(0,0,0,.5);
-  border:2px solid rgba(255,255,255,.8);
-  cursor:pointer;
-  font-weight:600;
-}
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
 .btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
 
 /* INPUT */
@@ -194,8 +170,10 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 <script type="module">
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
+// Telegram user
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
+
 const db = getDatabase();
 
 // Создать запись пользователя если нет
@@ -254,6 +232,10 @@ function copyRef(){
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
+  if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
+  else if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
+  else if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
 }
 
 // Задания
@@ -293,20 +275,10 @@ function sendReport(){
   if(!reportText){alert("Введите отчёт"); return;}
   const updates={};
   updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; // добавить отчёт
+  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
 function backToTasks(){ show('tasks'); }
-
-// Admin button
-if(userID===7020322752){
-  const adminBtnContainer = document.getElementById('admin-btn-container');
-  const btn = document.createElement('button');
-  btn.innerText = "Админка";
-  btn.className = "btn";
-  btn.onclick = ()=>alert("Админка открыта"); // сюда добавим админский функционал позже
-  adminBtnContainer.appendChild(btn);
-}
 </script>
 </body>
 </html>
