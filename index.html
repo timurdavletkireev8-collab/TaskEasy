@@ -32,7 +32,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:60px;font-weight:900;line-height:1.1;}
+.title{font-size:48px;font-weight:900;text-shadow: 2px 2px 6px black;} /* уменьшено, но заметно */
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
@@ -168,13 +168,11 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 </div>
 
 <script type="module">
+// Firebase + Telegram user
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-// Telegram user
+const db = getDatabase();
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
-
-const db = getDatabase();
 
 // Создать запись пользователя если нет
 function initUser() {
@@ -187,7 +185,7 @@ function initUser() {
 }
 initUser();
 
-// Обновление баланса и энергии
+// Обновление UI
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
   onValue(userRef, snapshot=>{
@@ -204,7 +202,6 @@ function updateUI(){
         d.innerText = h;
         histDiv.prepend(d);
       });
-      // реферал
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
     }
   });
@@ -268,10 +265,11 @@ function sendReport(){
   if(!reportText){alert("Введите отчёт"); return;}
   const updates={};
   updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; // добавить отчёт
+  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
 function backToTasks(){ show('tasks'); }
+
 </script>
 </body>
 </html>
