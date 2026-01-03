@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EASY MONEY - PRO</title>
+<title>EASY MONEY - FULL</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
@@ -20,8 +20,7 @@
     appId: "1:234016139024:web:f11daa0328ff06173d2795"
   };
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  window.db = db;
+  window.db = getDatabase(app);
 
   const tg = window.Telegram.WebApp;
   tg.expand();
@@ -32,25 +31,27 @@
   let energy = 1000;
   const adminID = 7020322752;
 
-  // Инициализация
-  const userRef = ref(db, "users/" + uid);
-  onValue(userRef, s => {
-    const d = s.val();
-    if(d) {
-      balance = d.balance || 0;
-      energy = d.energy || 0;
+  const userRef = ref(window.db, "users/" + uid);
+
+  // Синхронизация данных
+  onValue(userRef, snapshot => {
+    const data = snapshot.val();
+    if(data){
+      balance = data.balance || 0;
+      energy = data.energy || 1000;
       document.getElementById("balance").innerText = balance.toFixed(2);
       document.getElementById("energy").innerText = energy;
+      document.getElementById("uid").innerText = uid;
     } else {
-      set(userRef, {balance:0, energy:1000, uid: uid});
+      set(userRef, {balance:0, energy:1000, referrals:0, uid: uid});
     }
   });
 
-  // --- СПИСОК ЗАДАНИЙ ---
-  onValue(ref(db, "tasks"), s => {
+  // Загрузка заданий для юзера
+  onValue(ref(window.db, "tasks"), s => {
     const list = document.getElementById("task-list");
     list.innerHTML = "";
-    if(s.exists()) {
+    if(s.exists()){
       s.forEach(child => {
         const t = child.val();
         const div = document.createElement("div");
@@ -62,124 +63,61 @@
     }
   });
 
-  window.openTaskView = function(id, task) {
-    document.getElementById("t-title").innerText = task.name;
-    document.getElementById("t-desc").innerText = task.desc;
-    document.getElementById("t-price").innerText = task.price;
-    document.getElementById("t-link-btn").onclick = () => tg.openLink(task.link);
-    document.getElementById("t-send-btn").onclick = () => sendReport(id, task);
-    showPage('task-view');
-  };
-
-  window.sendReport = function(taskId, task) {
-    const info = document.getElementById("t-report-input").value;
-    if(!info) return alert("Введите данные для отчета!");
-    push(ref(db, "reports"), {
-        uid, taskId, taskName: task.name, info, price: task.price, status: "pending"
-    });
-    logAction(`Отправил отчет по: ${task.name}`);
-    alert("Отправлено на проверку!");
-    showPage('tasks');
-  };
-
-  // --- АДМИНКА: ПРОВЕРКА ---
+  // Логика Админки
   if(uid === adminID) {
-    // Отчеты
-    onValue(ref(db, "reports"), s => {
+    document.getElementById("admin-entry").style.display = "block";
+    
+    // Модерация отчетов
+    onValue(ref(window.db, "reports"), s => {
       const cont = document.getElementById("admin-reports-list");
       cont.innerHTML = "";
-      s.forEach(child => {
-        const r = child.val();
-        if(r.status === "pending") {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            <small>Юзер: ${r.uid}</small><br><b>${r.taskName}</b><br>
-            <p>Отчет: ${r.info}</p>
-            <button class="btn" style="background:green" onclick="approveReport('${child.key}')">Одобрить</button>
-            <button class="btn btn-red" onclick="rejectReport('${child.key}')">Отклонить</button>
-          `;
-          cont.appendChild(div);
+      s.forEach(c => {
+        const r = c.val();
+        if(r.status === "pending"){
+          const d = document.createElement("div");
+          d.className = "card";
+          d.innerHTML = `Юзер: ${r.uid}<br>Задание: ${r.taskName}<br>Отчет: ${r.info}<br>
+            <button class="btn" style="background:green" onclick="approveReport('${c.key}')">Одобрить</button>
+            <button class="btn btn-red" onclick="rejectReport('${c.key}')">Отклонить</button>`;
+          cont.appendChild(d);
         }
       });
     });
 
-    // Выводы
-    onValue(ref(db, "withdrawals"), s => {
+    // Модерация вывода
+    onValue(ref(window.db, "withdrawals"), s => {
       const cont = document.getElementById("admin-withdraw-list");
       cont.innerHTML = "";
-      s.forEach(child => {
-        const w = child.val();
-        if(w.status === "pending") {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            Карта: ${w.card}<br>Сумма: ${w.sum}₽<br>
-            <button class="btn" style="background:green" onclick="approveWithdraw('${child.key}', ${w.uid}, ${w.sum})">Выплачено</button>
-            <button class="btn btn-red" onclick="rejectWithdraw('${child.key}', ${w.uid}, ${w.sum})">Отклонить</button>
-          `;
-          cont.appendChild(div);
+      s.forEach(c => {
+        const w = c.val();
+        if(w.status === "pending"){
+          const d = document.createElement("div");
+          d.className = "card";
+          d.innerHTML = `ID: ${w.uid}<br>Карта: ${w.card}<br>Сумма: ${w.sum}₽<br>
+            <button class="btn" style="background:green" onclick="approveWithdraw('${c.key}')">Выплачено</button>
+            <button class="btn btn-red" onclick="rejectWithdraw('${c.key}')">Отклонить</button>`;
+          cont.appendChild(d);
         }
       });
     });
 
-    // Логи
-    onValue(ref(db, "logs"), s => {
-      const cont = document.getElementById("admin-logs-list");
-      cont.innerHTML = "";
-      const logs = [];
-      s.forEach(c => { logs.push(c.val()); });
-      logs.reverse().slice(0, 50).forEach(l => {
-        const div = document.createElement("div");
-        div.style.fontSize = "12px";
-        div.style.borderBottom = "1px solid #444";
-        div.innerText = `[${l.time}] ID${l.uid}: ${l.msg}`;
-        cont.appendChild(div);
-      });
+    // Список всех действий (Логи)
+    onValue(ref(window.db, "logs"), s => {
+        const cont = document.getElementById("admin-logs-list");
+        cont.innerHTML = "";
+        let logs = [];
+        s.forEach(c => { logs.push(c.val()); });
+        logs.reverse().slice(0, 50).forEach(l => {
+            const d = document.createElement("div");
+            d.style.fontSize = "11px";
+            d.style.borderBottom = "1px solid #444";
+            d.innerText = `[${l.time}] ID${l.uid}: ${l.msg}`;
+            cont.appendChild(d);
+        });
     });
   }
 
-  // --- ФУНКЦИИ МОДЕРАЦИИ ---
-  window.approveReport = function(id) {
-    get(ref(db, `reports/${id}`)).then(s => {
-        const r = s.val();
-        const uRef = ref(db, `users/${r.uid}`);
-        get(uRef).then(us => {
-            update(uRef, { balance: (us.val().balance || 0) + r.price });
-            update(ref(db, `reports/${id}`), { status: "approved" });
-            logAction(`ОДОБРИЛ задание юзеру ${r.uid}`, true);
-        });
-    });
-  };
-
-  window.rejectReport = function(id) {
-    update(ref(db, `reports/${id}`), { status: "rejected" });
-    logAction(`ОТКЛОНИЛ задание юзеру`, true);
-  };
-
-  window.approveWithdraw = function(id, user_id, sum) {
-    update(ref(db, `withdrawals/${id}`), { status: "completed" });
-    logAction(`ВЫПЛАТИЛ ${sum}₽ юзеру ${user_id}`, true);
-  };
-
-  window.rejectWithdraw = function(id, user_id, sum) {
-    const uRef = ref(db, `users/${user_id}`);
-    get(uRef).then(us => {
-        update(uRef, { balance: (us.val().balance || 0) + sum });
-        update(ref(db, `withdrawals/${id}`), { status: "rejected" });
-        logAction(`ОТКЛОНИЛ вывод юзеру ${user_id}`, true);
-    });
-  };
-
-  window.logAction = function(msg, isAdmin = false) {
-    push(ref(db, "logs"), {
-        uid: uid,
-        msg: msg,
-        time: new Date().toLocaleTimeString(),
-        isAdmin: isAdmin
-    });
-  };
-
+  // --- ГЛОБАЛЬНЫЕ ФУНКЦИИ ---
   window.showPage = function(id) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -188,24 +126,65 @@
   window.nav = function(id, event) {
     document.querySelectorAll(".nav img").forEach(i => i.classList.remove("active"));
     showPage(id);
-    if(event) event.currentTarget.classList.add("active");
+    if(event) event.target.classList.add("active");
   };
 
   window.tap = function() {
-    if(energy <= 0) return;
+    if(energy <= 0) return alert("Энергия кончилась");
     energy--;
     balance += 0.005;
     update(userRef, {balance, energy});
   };
 
+  window.openTaskView = function(id, task) {
+    document.getElementById("t-title").innerText = task.name;
+    document.getElementById("t-desc").innerText = task.desc;
+    document.getElementById("t-price").innerText = task.price;
+    document.getElementById("t-link-btn").onclick = () => window.tg.openLink(task.link);
+    document.getElementById("t-send-btn").onclick = () => sendReport(id, task);
+    showPage('task-view');
+  };
+
+  window.sendReport = function(taskId, task) {
+    const info = document.getElementById("t-report-input").value;
+    if(!info) return alert("Введите отчет!");
+    push(ref(window.db, "reports"), {uid, taskId, taskName: task.name, info, price: task.price, status: "pending"});
+    logAction(`Отправил отчет: ${task.name}`);
+    alert("Отправлено на проверку!");
+    showPage('tasks');
+  };
+
+  window.copyRef = function() {
+    navigator.clipboard.writeText(document.getElementById("refLink").innerText);
+    alert("Скопировано!");
+  };
+
   window.sendWithdraw = function() {
     const card = document.getElementById("card").value;
     const sum = Number(document.getElementById("sumWithdraw").value);
-    if(sum < 100 || !card || sum > balance) return alert("Ошибка данных или баланса");
+    if(sum < 100 || sum > balance) return alert("Ошибка суммы");
     update(userRef, {balance: balance - sum});
-    push(ref(db, "withdrawals"), {uid, card, sum, status: "pending"});
-    logAction(`Запрос на вывод ${sum}₽`);
+    push(ref(window.db, "withdrawals"), {uid, card, sum, status: "pending"});
+    logAction(`Заявка на вывод: ${sum}₽`);
     showPage('profile');
+  };
+
+  // Админские действия
+  window.approveReport = function(id) {
+    get(ref(window.db, `reports/${id}`)).then(s => {
+        const r = s.val();
+        const uR = ref(window.db, `users/${r.uid}`);
+        get(uR).then(us => {
+            update(uR, {balance: (us.val().balance || 0) + r.price});
+            update(ref(window.db, `reports/${id}`), {status: "approved"});
+            logAction(`Одобрил задачу юзеру ${r.uid}`, true);
+        });
+    });
+  };
+
+  window.rejectReport = function(id) {
+    update(ref(window.db, `reports/${id}`), {status: "rejected"});
+    logAction(`Отклонил задачу`, true);
   };
 
   window.addTask = function() {
@@ -213,38 +192,81 @@
     const desc = document.getElementById("adminTaskDesc").value;
     const link = document.getElementById("adminTaskLink").value;
     const price = Number(document.getElementById("adminTaskPrice").value);
-    push(ref(db, "tasks"), {name, desc, link, price});
-    alert("Опубликовано");
+    push(ref(window.db, "tasks"), {name, desc, link, price});
+    alert("Добавлено!");
+  };
+
+  window.logAction = function(msg, isAdmin=false) {
+    push(ref(window.db, "logs"), {uid, msg, time: new Date().toLocaleTimeString(), isAdmin});
+  };
+
+  window.approveWithdraw = function(id) {
+    update(ref(window.db, `withdrawals/${id}`), {status: "done"});
+    logAction(`Выплата одобрена`, true);
+  };
+
+  window.rejectWithdraw = function(id) {
+    get(ref(window.db, `withdrawals/${id}`)).then(s => {
+        const w = s.val();
+        const uR = ref(window.db, `users/${w.uid}`);
+        get(uR).then(us => {
+            update(uR, {balance: (us.val().balance || 0) + w.sum});
+            update(ref(window.db, `withdrawals/${id}`), {status: "rejected"});
+            logAction(`Отказ в выплате юзеру ${w.uid}`, true);
+        });
+    });
   };
 
 </script>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;height:100vh;font-family:sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;overflow:hidden;}
-.top{display:flex;justify-content:space-between;padding:15px;background:rgba(0,0,0,0.3)}
-.page{display:none;padding:15px;height:calc(100vh - 150px);overflow-y:auto;}
+body{margin:0;height:100vh;font-family:Arial,sans-serif;color:white;background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;overflow:hidden;}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
+.title{font-size:22px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.8);border-radius:16px;backdrop-filter:blur(5px);}
+.balance{padding:10px 14px;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:16px;cursor:pointer;}
+.page{display:none;padding:20px;height:calc(100vh - 150px);overflow-y:auto;}
 .active{display:block}
-.card{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.4);border-radius:15px;padding:15px;margin-bottom:10px;}
-.btn{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:none;background:white;color:black;font-weight:bold;cursor:pointer;}
-.btn-red{background:rgba(255,0,0,0.4);color:white;}
-.nav{position:fixed;bottom:0;width:100%;height:80px;display:flex;justify-content:space-around;background:rgba(0,0,0,0.8);align-items:center;}
-.nav img{width:40px;opacity:0.5;}
-.nav img.active{opacity:1;transform:scale(1.2)}
-.task-item{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
-input,textarea{width:100%;padding:10px;border-radius:10px;border:none;margin-top:10px;background:rgba(255,255,255,0.1);color:white;}
+.card{background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.7);border-radius:20px;padding:20px;margin-bottom:15px;}
+.btn{width:100%;padding:15px;margin-top:10px;font-weight:bold;color:white;background:rgba(0,0,0,0.4);border:2px solid white;border-radius:15px;cursor:pointer;}
+.btn-red{background:rgba(255,0,0,0.25);border-color:rgba(255,255,255,0.5);}
+.nav{position:fixed;bottom:0;width:100%;height:90px;background:rgba(0,0,0,0.7);display:flex;justify-content:space-around;align-items:center;}
+.nav img{width:45px;opacity:0.6;cursor:pointer;}
+.nav img.active{opacity:1;}
+.task-item{display:flex;justify-content:space-between;cursor:pointer;}
+input, textarea{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:1px solid white;background:rgba(0,0,0,0.3);color:white;}
+.click-img{width:200px;margin:20px auto;display:block;border-radius:20px;border:3px solid white;}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div style="font-weight:900">EASY MONEY</div>
-  <div onclick="showPage('withdraw')">💰 <span id="balance">0.00</span>₽</div>
+  <div class="title">EASY MONEY</div>
+  <div class="balance" onclick="showPage('withdraw')">Баланс: <span id="balance">0.00</span>₽</div>
 </div>
 
-<div id="tasks" class="page active">
-  <h3>📋 Список заданий</h3>
+<div id="earn" class="page active">
+  <div class="card">
+    <button class="btn" onclick="showPage('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="showPage('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="showPage('click')">Заработок на кликах</button>
+  </div>
+</div>
+
+<div id="referral" class="page">
+  <div class="card">
+    <h3>Рефералы</h3>
+    <p>+10₽ и 200 энергии за друга</p>
+    <p id="refLink" style="font-size:11px; color:#ccc"></p>
+    <button class="btn" onclick="copyRef()">Копировать</button>
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
+  </div>
+</div>
+
+<div id="tasks" class="page">
+  <h3>Доступные задания</h3>
   <div id="task-list"></div>
+  <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
 </div>
 
 <div id="task-view" class="page">
@@ -252,100 +274,89 @@ input,textarea{width:100%;padding:10px;border-radius:10px;border:none;margin-top
     <h2 id="t-title"></h2>
     <p id="t-desc"></p>
     <p>Награда: <b id="t-price"></b>₽</p>
-    <button class="btn" id="t-link-btn" style="background:#0088cc; color:white">Перейти по ссылке</button>
-    <textarea id="t-report-input" placeholder="Введите информацию для отчета..."></textarea>
-    <button class="btn" id="t-send-btn" style="background:#28a745; color:white">Отправить отчет</button>
+    <button class="btn" id="t-link-btn" style="background:#0088cc">Перейти по ссылке</button>
+    <textarea id="t-report-input" placeholder="Введите информацию из описания для отчета..."></textarea>
+    <button class="btn" id="t-send-btn" style="background:#28a745">Отправить отчет</button>
     <button class="btn btn-red" onclick="showPage('tasks')">Отмена</button>
   </div>
 </div>
 
 <div id="click" class="page">
-    <div class="card" style="text-align:center">
-        <p>Энергия: <span id="energy">1000</span></p>
-        <img src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" style="width:200px" onclick="tap()">
-        <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-    </div>
+  <div class="card" style="text-align:center">
+    <p>Энергия: <span id="energy">1000</span>/1000</p>
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
+  </div>
 </div>
 
 <div id="profile" class="page">
-    <div class="card">
-        <img id="profilePic" src="" style="width:60px; border-radius:50%">
-        <h3>ID: <span id="uid"></span></h3>
-        <button class="btn" onclick="showPage('withdraw')">Вывод денег</button>
-    </div>
+  <div class="card">
+    <img id="profilePic" style="width:50px; border-radius:50%">
+    <h3>Профиль ID: <span id="uid"></span></h3>
+    <button class="btn" onclick="showPage('withdraw')">Вывести</button>
+  </div>
 </div>
 
 <div id="withdraw" class="page">
-    <div class="card">
-        <h3>Вывод (от 100₽)</h3>
-        <input id="card" placeholder="Номер карты">
-        <input id="sumWithdraw" type="number" placeholder="Сумма">
-        <button class="btn" onclick="sendWithdraw()">Отправить</button>
-        <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
-    </div>
+  <div class="card">
+    <h3>Вывод от 100₽</h3>
+    <input id="card" placeholder="Номер карты">
+    <input id="sumWithdraw" type="number" placeholder="Сумма">
+    <button class="btn" onclick="sendWithdraw()">Отправить заявку</button>
+    <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
+  </div>
 </div>
 
 <div id="info" class="page">
-    <div class="card">
-        <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
-        <div id="admin-btn-container">
-            <button class="btn" onclick="showPage('admin-panel')" id="adm-main-btn" style="display:none">Админка</button>
-        </div>
-    </div>
+  <div class="card">
+    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <button id="admin-entry" class="btn" style="display:none" onclick="showPage('admin-main')">Админка</button>
+  </div>
 </div>
 
-<div id="admin-panel" class="page">
-    <button class="btn" onclick="showPage('admin-add-task')">➕ Добавить задание</button>
-    <button class="btn" onclick="showPage('admin-reports')">🔍 Проверка заданий</button>
-    <button class="btn" onclick="showPage('admin-withdraws')">💸 Заявки на вывод</button>
+<div id="admin-main" class="page">
+    <button class="btn" onclick="showPage('admin-add')">➕ Добавить задание</button>
+    <button class="btn" onclick="showPage('admin-reports')">🔎 Проверка заданий</button>
+    <button class="btn" onclick="showPage('admin-withdraws')">💰 Заявки на вывод</button>
     <button class="btn" onclick="showPage('admin-logs')">📜 Логи действий</button>
     <button class="btn btn-red" onclick="showPage('info')">Назад</button>
 </div>
 
-<div id="admin-add-task" class="page">
+<div id="admin-add" class="page">
     <div class="card">
         <input id="adminTaskName" placeholder="Название">
         <textarea id="adminTaskDesc" placeholder="Описание"></textarea>
         <input id="adminTaskLink" placeholder="Ссылка">
         <input id="adminTaskPrice" type="number" placeholder="Цена">
-        <button class="btn" onclick="addTask()">Создать задание</button>
-        <button class="btn btn-red" onclick="showPage('admin-panel')">Назад</button>
+        <button class="btn" onclick="addTask()">Опубликовать</button>
+        <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
     </div>
 </div>
 
 <div id="admin-reports" class="page">
     <h3>Проверка отчетов</h3>
     <div id="admin-reports-list"></div>
-    <button class="btn btn-red" onclick="showPage('admin-panel')">Назад</button>
+    <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
 </div>
 
 <div id="admin-withdraws" class="page">
     <h3>Заявки на вывод</h3>
     <div id="admin-withdraw-list"></div>
-    <button class="btn btn-red" onclick="showPage('admin-panel')">Назад</button>
+    <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
 </div>
 
 <div id="admin-logs" class="page">
     <h3>История действий</h3>
-    <div id="admin-logs-list" class="card" style="font-family: monospace;"></div>
-    <button class="btn btn-red" onclick="showPage('admin-panel')">Назад</button>
+    <div id="admin-logs-list" class="card"></div>
+    <button class="btn btn-red" onclick="showPage('admin-main')">Назад</button>
 </div>
 
 <div class="nav">
-  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('tasks', event)" class="active">
-  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('click', event)">
+  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', event)" class="active">
   <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile', event)">
   <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info', event)">
 </div>
-
-<script>
-    // Показ кнопки админа
-    setTimeout(() => {
-        if(window.tg.initDataUnsafe?.user?.id === 7020322752) {
-            document.getElementById('adm-main-btn').style.display = 'block';
-        }
-    }, 1000);
-</script>
 
 </body>
 </html>
