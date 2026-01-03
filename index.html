@@ -4,112 +4,39 @@
 <meta charset="UTF-8">
 <title>EASY MONEY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
 *{box-sizing:border-box}
-html,body{
-  margin:0;
-  height:100%;
-  overflow:hidden;
-  font-family:Arial, sans-serif;
-}
-
-body{
-  background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;
-  color:white;
-}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
+body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
 
 /* TOP */
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px 24px;
-}
-.title{
-  font-size:44px;
-  font-weight:900;
-}
-.balance{
-  background:rgba(0,0,0,.55);
-  padding:12px 18px;
-  border-radius:16px;
-  border:2px solid rgba(255,255,255,.8);
-}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
+.title{font-size:44px;font-weight:900;}
+.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);}
 
 /* PAGES */
-.page{
-  display:none;
-  padding:24px;
-  height:calc(100% - 180px);
-  overflow-y:auto;
-}
+.page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
 .page.active{display:block}
 
 /* CARDS */
-.card{
-  background:rgba(0,0,0,.45);
-  border-radius:22px;
-  padding:24px;
-  margin-bottom:20px;
-  border:2px solid rgba(255,255,255,.8);
-}
+.card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
 /* BUTTONS */
-.btn{
-  width:100%;
-  padding:18px;
-  margin-top:16px;
-  font-size:18px;
-  border-radius:18px;
-  color:white;
-  background:rgba(0,0,0,.5);
-  border:2px solid rgba(255,255,255,.8);
-}
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* INPUT */
-input, textarea{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  border-radius:14px;
-  border:2px solid rgba(255,255,255,.6);
-  background:rgba(0,0,0,.5);
-  color:white;
-  font-size:16px;
-}
+input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
 
 /* NAV */
-.nav{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  height:100px;
-  background:rgba(0,0,0,.6);
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-}
-.nav div{
-  font-size:32px;
-  opacity:.5;
-}
-.nav .active{opacity:1}
+.nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
+.nav div{font-size:32px;opacity:.5;cursor:pointer;}
+.nav .active{opacity:1;}
 
 /* CLICK IMAGE */
-.click-img{
-  width:180px;
-  height:180px;
-  margin:40px auto;
-  display:block;
-  border-radius:20px;
-  border:3px solid rgba(255,255,255,.9);
-}
+.click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
 </style>
 </head>
-
 <body>
 
 <div class="top">
@@ -130,20 +57,20 @@ input, textarea{
 <div id="tasks" class="page">
   <div class="card">
     <h3>Задания</h3>
-    <div class="btn" onclick="openTask()">Подписка на канал</div>
-    <button class="btn" onclick="show('earn')">Назад</button>
+    <div class="btn" onclick="openTask('Подписка на канал','Подпишитесь на канал и отправьте скриншот','https://t.me/news',20)">Подписка на канал</div>
+    <div class="btn" onclick="show('earn')">Назад</div>
   </div>
 </div>
 
 <!-- КОНКРЕТНОЕ ЗАДАНИЕ -->
 <div id="taskView" class="page">
   <div class="card">
-    <h3>Подписка на канал</h3>
-    <p>Подпишитесь на канал и отправьте скриншот</p>
+    <h3 id="task-title"></h3>
+    <p id="task-desc"></p>
 
-    <button class="btn" onclick="window.open('https://t.me/news')">Перейти по ссылке</button>
-    <button class="btn" onclick="show('report')">Отправить отчёт</button>
-    <button class="btn" onclick="show('tasks')">Назад</button>
+    <button class="btn" id="task-link-btn">Перейти по ссылке</button>
+    <button class="btn" onclick="showReport()">Отправить отчёт</button>
+    <button class="btn" onclick="backToTasks()">Назад</button>
   </div>
 </div>
 
@@ -151,8 +78,8 @@ input, textarea{
 <div id="report" class="page">
   <div class="card">
     <h3>Отчёт</h3>
-    <textarea placeholder="Вставьте текст или ссылку на скриншот"></textarea>
-    <button class="btn" onclick="alert('Отправлено на проверку')">Отправить</button>
+    <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
+    <button class="btn" onclick="sendReport()">Отправить</button>
     <button class="btn" onclick="show('taskView')">Назад</button>
   </div>
 </div>
@@ -165,6 +92,28 @@ input, textarea{
       src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
       onclick="tap()">
     <button class="btn" onclick="show('earn')">Назад</button>
+  </div>
+</div>
+
+<!-- ПРОФИЛЬ -->
+<div id="profile" class="page">
+  <div class="card">
+    <h3>Профиль</h3>
+    <p>ID: <span id="user-id">0</span></p>
+    <p>Выполненные задания: <span id="done-tasks">0</span></p>
+    <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
+    <h4>История начислений</h4>
+    <div id="history"></div>
+  </div>
+</div>
+
+<!-- ИНФОРМАЦИЯ -->
+<div id="info" class="page">
+  <div class="card">
+    <h3>Информация</h3>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <div id="admin-btn-container"></div>
   </div>
 </div>
 
@@ -181,6 +130,21 @@ tg.expand();
 
 let balance = 0;
 let energy = 1000;
+let userID = tg.initDataUnsafe?.user?.id || 0;
+const adminID = 7020322752;
+let taskStatus = {}; // taskID: "on_check", "done"
+
+document.getElementById('user-id').innerText = userID;
+
+// Show admin button
+if(userID === adminID){
+  const container = document.getElementById('admin-btn-container');
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.innerText = 'Админка';
+  btn.onclick = ()=>alert('Откроется админка для добавления/проверки заданий');
+  container.appendChild(btn);
+}
 
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -188,27 +152,40 @@ function show(id){
 }
 
 function tap(){
-  if(energy<=0) return;
-  energy--;
-  balance+=0.005;
-  balance = +balance.toFixed(3);
-  document.getElementById("energy").innerText=energy;
-  document.getElementById("balance").innerText=balance;
+  if(energy<=0){alert('Энергия закончилась'); return;}
+  energy--; balance +=0.005; balance = +balance.toFixed(3);
+  document.getElementById("energy").innerText = energy;
+  document.getElementById("balance").innerText = balance;
 }
 
 function openRef(){
-  alert(
-`Приглашайте друзей:
-10₽ + 200 энергии
-
-https://t.me/DifferentEarningsBot?start=ID`
-  );
+  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  alert(`Приглашайте друзей:\n10₽ + 200 энергии\n\n${link}`);
 }
 
-function openTask(){
+function openTask(title, desc, link, price){
+  if(taskStatus[title] === "on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
+  document.getElementById("task-title").innerText = title;
+  document.getElementById("task-desc").innerText = desc;
+  document.getElementById("task-link-btn").onclick = ()=>window.open(link,"_blank");
   show('taskView');
 }
-</script>
 
+function showReport(){
+  show('report');
+}
+
+function sendReport(){
+  const text = document.getElementById("report-text").value;
+  if(!text){alert("Введите отчёт"); return;}
+  alert("Отправлено на проверку");
+  taskStatus[document.getElementById("task-title").innerText] = "on_check";
+  show('tasks');
+}
+
+function backToTasks(){
+  show('tasks');
+}
+</script>
 </body>
 </html>
