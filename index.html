@@ -2,141 +2,276 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<title>EASY MONEY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Easy Money</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+    authDomain: "cash-1968a.firebaseapp.com",
+    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+    projectId: "cash-1968a",
+    storageBucket: "cash-1968a.appspot.com",
+    messagingSenderId: "234016139024",
+    appId: "1:234016139024:web:f11daa0328ff06173d2795",
+    measurementId: "G-MFEKWBVN21"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+</script>
+
 <style>
-:root {
-  --black-glass: rgba(0,0,0,0.6);
-  --white-border: rgba(255,255,255,0.8);
-}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
+body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
 
-body {
-  margin:0;
-  font-family:'Arial Black', sans-serif;
-  background: radial-gradient(circle at center,#1b3d2f 0%,#000 100%);
-  color:white;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
+/* TOP */
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
+.title{font-size:60px;font-weight:900;line-height:1.1;}
+.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
-.top-bar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px;
-  background: var(--black-glass);
-}
+/* PAGES */
+.page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
+.page.active{display:block}
 
-.top-bar .title {
-  font-size:36px;
-  font-weight:bold;
-}
+/* CARDS */
+.card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
-.top-bar .balance {
-  font-size:20px;
-  cursor:pointer;
-}
+/* BUTTONS */
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
+.btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
 
-.main-container {
-  flex:1;
-  padding:20px;
-  overflow-y:auto;
-}
+/* INPUT */
+input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
 
-.page { display:none; }
-.page.active { display:block; }
+/* NAV */
+.nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
+.nav div{font-size:32px;opacity:.5;cursor:pointer;}
+.nav .active{opacity:1;}
 
-.card {
-  background: var(--black-glass);
-  border-radius:20px;
-  border:2px solid var(--white-border);
-  padding:20px;
-  margin-bottom:15px;
-}
-
-.btn {
-  display:inline-block;
-  padding:14px 22px;
-  border-radius:15px;
-  background: var(--black-glass);
-  border:2px solid var(--white-border);
-  color:white;
-  font-weight:bold;
-  margin:10px 0;
-  cursor:pointer;
-}
-
-.nav-bar {
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
-  background: var(--black-glass);
-  border-top:2px solid var(--white-border);
-  position:fixed;
-  bottom:0;
-  width:100%;
-}
-
-.nav-bar .nav-btn {
-  flex:1;
-  margin:0 5px;
-  font-size:20px;
-  cursor:pointer;
-}
+/* CLICK IMAGE */
+.click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
 </style>
 </head>
 <body>
 
-<div class="top-bar">
+<div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance" onclick="alert('Вывод средств')">Баланс: <span id="balance-text">0</span>₽</div>
+  <div class="balance" onclick="show('withdraw')">Баланс: <span id="balance">0</span>₽</div>
 </div>
 
-<div class="main-container">
-  <!-- Заработок -->
-  <div id="earn" class="page active">
-    <div class="card"><button class="btn" onclick="alert('Заработок на рефералах')">Заработок на рефералах</button></div>
-    <div class="card"><button class="btn" onclick="alert('Заработок на заданиях')">Заработок на заданиях</button></div>
-    <div class="card"><button class="btn" onclick="alert('Заработок на кликах')">Заработок на кликах</button></div>
-  </div>
-
-  <!-- Профиль -->
-  <div id="profile" class="page">
-    <div class="card">
-      <p>ID: <span id="user-id">12345</span></p>
-      <p>Фото Telegram</p>
-      <p>Выполнено заданий: <span id="completed-tasks">0</span></p>
-      <p>Отклонено заданий: <span id="rejected-tasks">0</span></p>
-      <button class="btn" onclick="alert('Вывести средства')">Вывести</button>
-    </div>
-  </div>
-
-  <!-- Информация -->
-  <div id="info" class="page">
-    <div class="card">
-      <button class="btn" onclick="window.open('https://t.me/news','_blank')">Новости</button>
-      <button class="btn" onclick="window.open('https://t.me/sup','_blank')">Поддержка</button>
-    </div>
+<!-- ЗАРАБОТОК -->
+<div id="earn" class="page active">
+  <div class="card">
+    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="show('click')">Заработок на кликах</button>
   </div>
 </div>
 
-<div class="nav-bar">
-  <div class="nav-btn" onclick="showPage('earn')">💰</div>
-  <div class="nav-btn" onclick="showPage('profile')">👤</div>
-  <div class="nav-btn" onclick="showPage('info')">ℹ️</div>
+<!-- РЕФЕРАЛЫ -->
+<div id="referral" class="page">
+  <div class="card">
+    <h3>Приглашайте друзей и зарабатывайте</h3>
+    <p>1 друг = <b>10₽</b> + 200 энергии</p>
+    <p id="ref-link"></p>
+    <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+  </div>
 </div>
 
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+<!-- ЗАДАНИЯ -->
+<div id="tasks" class="page">
+  <div class="card">
+    <h3>Задания</h3>
+    <div id="task-list"></div>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+  </div>
+</div>
 
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+<!-- КОНКРЕТНОЕ ЗАДАНИЕ -->
+<div id="taskView" class="page">
+  <div class="card">
+    <h3 id="task-title"></h3>
+    <p id="task-desc"></p>
+    <button class="btn" id="task-link-btn">Перейти по ссылке</button>
+    <button class="btn" onclick="showReport()">Отправить отчёт</button>
+    <button class="btn btn-red" onclick="backToTasks()">Назад</button>
+  </div>
+</div>
+
+<!-- ОТЧЁТ -->
+<div id="report" class="page">
+  <div class="card">
+    <h3>Отчёт</h3>
+    <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
+    <button class="btn" onclick="sendReport()">Отправить</button>
+    <button class="btn btn-red" onclick="show('taskView')">Назад</button>
+  </div>
+</div>
+
+<!-- КЛИКИ -->
+<div id="click" class="page">
+  <div class="card">
+    <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
+    <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
+    <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
+    <img class="click-img"
+      src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
+      onclick="tap()">
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+  </div>
+</div>
+
+<!-- ПРОФИЛЬ -->
+<div id="profile" class="page">
+  <div class="card">
+    <h3>Профиль</h3>
+    <p>ID: <span id="user-id">0</span></p>
+    <p>Выполненные задания: <span id="done-tasks">0</span></p>
+    <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
+    <h4>История начислений</h4>
+    <div id="history"></div>
+    <button class="btn btn-red" onclick="show('withdraw')">Вывести</button>
+  </div>
+</div>
+
+<!-- ВЫВОД -->
+<div id="withdraw" class="page">
+  <div class="card">
+    <h3>Вывод средств</h3>
+    <p>Здесь можно вывести баланс.</p>
+    <button class="btn btn-red" onclick="show('profile')">Назад</button>
+  </div>
+</div>
+
+<!-- ИНФОРМАЦИЯ -->
+<div id="info" class="page">
+  <div class="card">
+    <h3>Информация</h3>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
+    <div id="admin-btn-container"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="active" onclick="show('earn')">💰</div>
+  <div onclick="show('profile')">👤</div>
+  <div onclick="show('info')">ℹ️</div>
+</div>
+
+<script type="module">
+import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+// Telegram user
+let userID = tg.initDataUnsafe?.user?.id || 0;
+document.getElementById('user-id').innerText = userID;
+
+const db = getDatabase();
+
+// Создать запись пользователя если нет
+function initUser() {
+  const userRef = ref(db,'users/'+userID);
+  get(userRef).then(snapshot=>{
+    if(!snapshot.exists()){
+      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
+    }
+  });
 }
+initUser();
+
+// Обновление баланса и энергии
+function updateUI(){
+  const userRef = ref(db,'users/'+userID);
+  onValue(userRef, snapshot=>{
+    const data = snapshot.val();
+    if(data){
+      document.getElementById("balance").innerText = data.balance.toFixed(2);
+      document.getElementById("energy").innerText = data.energy;
+      document.getElementById("done-tasks").innerText = data.doneTasks;
+      document.getElementById("failed-tasks").innerText = data.failedTasks;
+      const histDiv = document.getElementById("history");
+      histDiv.innerHTML = "";
+      data.history?.forEach(h=>{
+        const d = document.createElement("div");
+        d.innerText = h;
+        histDiv.prepend(d);
+      });
+      // реферал
+      document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
+    }
+  });
+}
+updateUI();
+
+// Clicker
+function tap(){
+  const userRef = ref(db,'users/'+userID);
+  get(userRef).then(snapshot=>{
+    const data = snapshot.val();
+    if(data.energy<=0){alert("Энергия закончилась"); return;}
+    update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
+  });
+}
+
+// Copy referral
+function copyRef(){
+  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  navigator.clipboard.writeText(link);
+  alert("Скопировано!");
+}
+
+// Pages
+function show(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// Задания
+const taskListDiv = document.getElementById("task-list");
+function loadTasks(){
+  const tasksRef = ref(db,'tasks');
+  onValue(tasksRef, snapshot=>{
+    taskListDiv.innerHTML="";
+    snapshot.forEach(child=>{
+      const t = child.val();
+      const btn = document.createElement("div");
+      btn.className="btn";
+      btn.innerText = t.name;
+      btn.onclick = ()=>openTask(t,child.key);
+      taskListDiv.appendChild(btn);
+    });
+  });
+}
+loadTasks();
+
+let currentTaskID=null;
+function openTask(task,key){
+  currentTaskID = key;
+  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
+  get(userRef).then(snapshot=>{
+    if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
+    document.getElementById("task-title").innerText = task.name;
+    document.getElementById("task-desc").innerText = task.desc;
+    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
+    show('taskView');
+  });
+}
+
+function showReport(){ show('report'); }
+function sendReport(){
+  const reportText = document.getElementById("report-text").value;
+  if(!reportText){alert("Введите отчёт"); return;}
+  const updates={};
+  updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
+  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; // добавить отчёт
+  update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
+}
+function backToTasks(){ show('tasks'); }
 </script>
 </body>
 </html>
