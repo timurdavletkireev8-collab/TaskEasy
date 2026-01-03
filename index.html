@@ -7,10 +7,6 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <style>
 *{box-sizing:border-box}
 html,body{
@@ -40,6 +36,7 @@ body{
   background:rgba(0,0,0,.55);
   padding:12px 18px;
   border-radius:16px;
+  border:2px solid rgba(255,255,255,.8);
 }
 
 /* PAGES */
@@ -57,6 +54,7 @@ body{
   border-radius:22px;
   padding:24px;
   margin-bottom:20px;
+  border:2px solid rgba(255,255,255,.8);
 }
 
 /* BUTTONS */
@@ -65,14 +63,10 @@ body{
   padding:18px;
   margin-top:16px;
   font-size:18px;
-  border:none;
   border-radius:18px;
   color:white;
-  background:linear-gradient(
-    135deg,
-    rgba(255,255,255,.18),
-    rgba(0,0,0,.45)
-  );
+  background:rgba(0,0,0,.5);
+  border:2px solid rgba(255,255,255,.8);
 }
 
 /* INPUT */
@@ -81,19 +75,19 @@ input, textarea{
   padding:14px;
   margin-top:12px;
   border-radius:14px;
-  border:none;
+  border:2px solid rgba(255,255,255,.6);
   background:rgba(0,0,0,.5);
   color:white;
   font-size:16px;
 }
 
-/* BOTTOM NAV */
+/* NAV */
 .nav{
   position:fixed;
   bottom:0;
   width:100%;
   height:100px;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.6);
   display:flex;
   justify-content:space-around;
   align-items:center;
@@ -104,11 +98,14 @@ input, textarea{
 }
 .nav .active{opacity:1}
 
-/* CLICK */
-.coin{
-  font-size:96px;
-  text-align:center;
-  margin:40px 0;
+/* CLICK IMAGE */
+.click-img{
+  width:180px;
+  height:180px;
+  margin:40px auto;
+  display:block;
+  border-radius:20px;
+  border:3px solid rgba(255,255,255,.9);
 }
 </style>
 </head>
@@ -132,53 +129,31 @@ input, textarea{
 <!-- ЗАДАНИЯ -->
 <div id="tasks" class="page">
   <div class="card">
-    <h3>Доступные задания</h3>
-    <div id="taskList"></div>
+    <h3>Задания</h3>
+    <div class="btn" onclick="openTask()">Подписка на канал</div>
     <button class="btn" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
-<!-- ПРОФИЛЬ -->
-<div id="profile" class="page">
+<!-- КОНКРЕТНОЕ ЗАДАНИЕ -->
+<div id="taskView" class="page">
   <div class="card">
-    <img id="avatar" width="90" style="border-radius:50%">
-    <div>ID: <span id="uid"></span></div>
-    <div>Выполнено: <span id="done">0</span></div>
-    <div>Отклонено: <span id="fail">0</span></div>
-  </div>
+    <h3>Подписка на канал</h3>
+    <p>Подпишитесь на канал и отправьте скриншот</p>
 
-  <div class="card">
-    <b>История начислений</b>
-    <div id="history"></div>
+    <button class="btn" onclick="window.open('https://t.me/news')">Перейти по ссылке</button>
+    <button class="btn" onclick="show('report')">Отправить отчёт</button>
+    <button class="btn" onclick="show('tasks')">Назад</button>
   </div>
 </div>
 
-<!-- ИНФО -->
-<div id="info" class="page">
+<!-- ОТЧЁТ -->
+<div id="report" class="page">
   <div class="card">
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <button id="adminOpen" class="btn" style="display:none" onclick="show('admin')">
-      Админка
-    </button>
-  </div>
-</div>
-
-<!-- АДМИНКА -->
-<div id="admin" class="page">
-  <div class="card">
-    <h3>Добавить задание</h3>
-    <input id="aName" placeholder="Название">
-    <textarea id="aDesc" placeholder="Описание"></textarea>
-    <input id="aPrice" placeholder="Цена">
-    <input id="aLink" placeholder="Ссылка">
-    <button class="btn" onclick="addTask()">Добавить</button>
-  </div>
-
-  <div class="card">
-    <h3>Задания</h3>
-    <div id="adminTasks"></div>
-    <button class="btn" onclick="show('info')">Назад</button>
+    <h3>Отчёт</h3>
+    <textarea placeholder="Вставьте текст или ссылку на скриншот"></textarea>
+    <button class="btn" onclick="alert('Отправлено на проверку')">Отправить</button>
+    <button class="btn" onclick="show('taskView')">Назад</button>
   </div>
 </div>
 
@@ -186,97 +161,53 @@ input, textarea{
 <div id="click" class="page">
   <div class="card">
     Энергия: <span id="energy">1000</span>/1000
-    <div class="coin" onclick="tap()">🪙</div>
+    <img class="click-img"
+      src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
+      onclick="tap()">
     <button class="btn" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
-<!-- НАВ -->
+<!-- NAV -->
 <div class="nav">
-  <div id="n-earn" class="active" onclick="show('earn')">💰</div>
-  <div id="n-profile" onclick="show('profile')">👤</div>
-  <div id="n-info" onclick="show('info')">ℹ️</div>
+  <div class="active" onclick="show('earn')">💰</div>
+  <div onclick="show('profile')">👤</div>
+  <div onclick="show('info')">ℹ️</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const user = tg.initDataUnsafe.user;
-const userID = user?.id || 0;
-
-document.getElementById("uid").innerText = userID;
-document.getElementById("avatar").src = user?.photo_url || "";
-
-if(userID === 7020322752){
-  document.getElementById("adminOpen").style.display="block";
-}
-
 let balance = 0;
 let energy = 1000;
 
-/* NAV */
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.getElementById('n-'+id)?.classList.add('active');
 }
 
-/* REF */
+function tap(){
+  if(energy<=0) return;
+  energy--;
+  balance+=0.005;
+  balance = +balance.toFixed(3);
+  document.getElementById("energy").innerText=energy;
+  document.getElementById("balance").innerText=balance;
+}
+
 function openRef(){
   alert(
 `Приглашайте друзей:
 10₽ + 200 энергии
 
-https://t.me/DifferentEarningsBot?start=${userID}`
+https://t.me/DifferentEarningsBot?start=ID`
   );
 }
 
-/* CLICK */
-function tap(){
-  if(energy<=0) return;
-  energy--;
-  balance+=0.005;
-  document.getElementById("energy").innerText=energy;
-  document.getElementById("balance").innerText=balance.toFixed(3);
+function openTask(){
+  show('taskView');
 }
-
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-  authDomain: "cash-1968a.firebaseapp.com",
-  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-  projectId: "cash-1968a"
-});
-
-const db = firebase.database();
-const tasksRef = db.ref("tasks");
-
-/* ADMIN */
-function addTask(){
-  const t = {
-    name:aName.value,
-    desc:aDesc.value,
-    price:aPrice.value,
-    link:aLink.value
-  };
-  tasksRef.push(t);
-}
-
-tasksRef.on("value",s=>{
-  taskList.innerHTML="";
-  adminTasks.innerHTML="";
-  s.forEach(c=>{
-    const t=c.val();
-    taskList.innerHTML+=`<div class="card">${t.name}</div>`;
-    adminTasks.innerHTML+=`
-      <div class="card">
-        ${t.name}
-        <button class="btn" onclick="tasksRef.child('${c.key}').remove()">Удалить</button>
-      </div>`;
-  });
-});
 </script>
 
 </body>
