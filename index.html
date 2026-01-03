@@ -6,25 +6,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+    authDomain: "cash-1968a.firebaseapp.com",
+    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+    projectId: "cash-1968a",
+    storageBucket: "cash-1968a.appspot.com",
+    messagingSenderId: "234016139024",
+    appId: "1:234016139024:web:f11daa0328ff06173d2795",
+    measurementId: "G-MFEKWBVN21"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+</script>
+
 <style>
-*{box-sizing:border-box;}
+*{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
 body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
 
+/* LOADER */
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;justify-content:center;align-items:center;z-index:9999;}
+#loader div{border:6px solid #f3f3f3;border-top:6px solid #3498db;border-radius:50%;width:80px;height:80px;animation:spin 1s linear infinite;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:36px;font-weight:900;text-shadow:0 0 10px rgba(255,255,255,0.7);}
+.title{font-size:36px;font-weight:900;text-shadow:0 0 10px rgba(255,255,255,.7);}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
-.page.active{display:block;}
+.page.active{display:block}
 
 /* CARDS */
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
 /* BUTTONS */
-.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:700;}
 .btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
 
 /* INPUT */
@@ -32,16 +57,17 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 /* NAV */
 .nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
-.nav div{width:60px;height:60px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:0.3s;}
-.nav div img{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);background:rgba(0,0,0,0.3);transition:0.3s;}
-.nav div.active img{border-color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.4);}
-.nav div:hover img{transform:scale(1.1);border-color:rgba(255,255,255,0.9);}
+.nav div{font-size:32px;opacity:.5;cursor:pointer;}
+.nav .active{opacity:1;}
 
 /* CLICK IMAGE */
 .click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
 </style>
 </head>
 <body>
+
+<!-- LOADER -->
+<div id="loader"><div></div></div>
 
 <div class="top">
   <div class="title">EASY MONEY</div>
@@ -51,9 +77,9 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 <!-- ЗАРАБОТОК -->
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
-    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
-    <button class="btn" onclick="show('click')">Заработок на кликах</button>
+    <button class="btn" onclick="show('referral')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" width="30"> Заработок на рефералах</button>
+    <button class="btn" onclick="show('tasks')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" width="30"> Заработок на заданиях</button>
+    <button class="btn" onclick="show('click')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" width="30"> Заработок на кликах</button>
   </div>
 </div>
 
@@ -104,7 +130,9 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
     <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
     <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
-    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <img class="click-img"
+      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
+      onclick="tap()">
     <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
@@ -143,32 +171,39 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <!-- NAV -->
 <div class="nav">
-  <div onclick="show('earn')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png"></div>
-  <div onclick="show('profile')"><img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png"></div>
-  <div onclick="show('info')"><img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png"></div>
+  <div class="active" onclick="show('earn')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" width="50"></div>
+  <div onclick="show('profile')"><img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" width="50"></div>
+  <div onclick="show('info')"><img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" width="50"></div>
 </div>
 
 <script type="module">
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-const db = getDatabase();
-const userID = tg.initDataUnsafe?.user?.id || 0;
+// Telegram user
+let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
 
-// Инициализация юзера
+const db = getDatabase();
+
+// LOADER
+window.onload = ()=>{setTimeout(()=>{document.getElementById('loader').style.display='none';}, 1000);};
+
+// Создать запись пользователя если нет
 function initUser() {
   const userRef = ref(db,'users/'+userID);
-  get(userRef).then(s=>{
-    if(!s.exists()){set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});}
+  get(userRef).then(snapshot=>{
+    if(!snapshot.exists()){
+      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
+    }
   });
 }
 initUser();
 
-// Обновление UI
+// Обновление баланса и энергии
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
-  onValue(userRef, s=>{
-    const data = s.val();
+  onValue(userRef, snapshot=>{
+    const data = snapshot.val();
     if(data){
       document.getElementById("balance").innerText = data.balance.toFixed(2);
       document.getElementById("energy").innerText = data.energy;
@@ -181,38 +216,38 @@ function updateUI(){
         d.innerText = h;
         histDiv.prepend(d);
       });
+      // реферал
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
     }
   });
 }
 updateUI();
 
-// Кликер
+// Clicker
 function tap(){
   const userRef = ref(db,'users/'+userID);
-  get(userRef).then(s=>{
-    const data = s.val();
+  get(userRef).then(snapshot=>{
+    const data = snapshot.val();
     if(data.energy<=0){alert("Энергия закончилась"); return;}
     update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
   });
 }
 
-// Копирование реферала
+// Copy referral
 function copyRef(){
-  navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`);
+  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  navigator.clipboard.writeText(link);
   alert("Скопировано!");
 }
 
-// ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ
+// Pages
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-
-  const navItems = document.querySelectorAll('.nav div');
-  navItems.forEach(d=>d.classList.remove('active'));
-  if(id==='earn') navItems[0].classList.add('active');
-  if(id==='profile') navItems[1].classList.add('active');
-  if(id==='info') navItems[2].classList.add('active');
+  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
+  if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
+  if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
+  if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
 }
 
 // Задания
@@ -252,11 +287,10 @@ function sendReport(){
   if(!reportText){alert("Введите отчёт"); return;}
   const updates={};
   updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
+  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; // добавить отчёт
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
 function backToTasks(){ show('tasks'); }
-
 </script>
 </body>
 </html>
