@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
@@ -20,28 +21,29 @@ const firebaseConfig = {
   appId: "1:234016139024:web:f11daa0328ff06173d2795",
   measurementId: "G-MFEKWBVN21"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 </script>
 
 <style>
-*{box-sizing:border-box;}
+*{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
 body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
 
-/* LOADING */
-#loading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:999;}
-#loading .circle{width:80px;height:80px;border:8px solid rgba(255,255,255,0.3);border-top:8px solid #fff;border-radius:50%;animation:spin 1s linear infinite;}
+/* LOADER */
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:9999;}
+.spinner{border:8px solid rgba(255,255,255,.2);border-top:8px solid white;border-radius:50%;width:80px;height:80px;animation:spin 1s linear infinite;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:22px;font-weight:900;color:rgba(255,255,255,0.9);text-shadow:2px 2px 5px black,-2px -2px 5px black;}
+.title{font-size:36px;font-weight:900;text-shadow:2px 2px 8px rgba(0,0,0,0.5);}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
-.page.active{display:block;}
+.page.active{display:block}
 
 /* CARDS */
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
@@ -53,10 +55,11 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 /* INPUT */
 input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
 
-/* NAV BOTTOM с нарисованными эмодзи */
+/* NAV */
 .nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
-.nav div{font-size:32px;opacity:.6;cursor:pointer;display:flex;justify-content:center;align-items:center;}
+.nav div{cursor:pointer;opacity:.5;}
 .nav .active{opacity:1;}
+.nav img{width:50px;height:50px;border-radius:50%;border:2px solid white;}
 
 /* CLICK IMAGE */
 .click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
@@ -64,8 +67,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading"><div class="circle"></div></div>
+<div id="loader"><div class="spinner"></div></div>
 
 <div class="top">
   <div class="title">EASY MONEY</div>
@@ -122,15 +124,13 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   </div>
 </div>
 
-<!-- КЛИКЕР -->
+<!-- КЛИКИ -->
 <div id="click" class="page">
   <div class="card">
     <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
     <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
     <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
-    <img class="click-img"
-      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
-      onclick="tap()">
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
     <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
@@ -167,46 +167,43 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   </div>
 </div>
 
-<!-- NAV с нарисованными эмодзи -->
+<!-- NAV -->
 <div class="nav">
   <div class="active" onclick="show('earn')">
-    <svg width="40" height="40">
-      <circle cx="20" cy="20" r="18" fill="gold" stroke="white" stroke-width="2"/>
-      <text x="20" y="25" font-size="20" text-anchor="middle" fill="black">💰</text>
-    </svg>
+    <img src="https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg">
   </div>
   <div onclick="show('profile')">
-    <svg width="40" height="40">
-      <circle cx="20" cy="20" r="18" fill="skyblue" stroke="white" stroke-width="2"/>
-      <text x="20" y="25" font-size="20" text-anchor="middle" fill="black">👤</text>
-    </svg>
+    <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png">
   </div>
   <div onclick="show('info')">
-    <svg width="40" height="40">
-      <circle cx="20" cy="20" r="18" fill="limegreen" stroke="white" stroke-width="2"/>
-      <text x="20" y="25" font-size="20" text-anchor="middle" fill="black">ℹ️</text>
-    </svg>
+    <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png">
   </div>
 </div>
 
 <script type="module">
-const tg = window.Telegram.WebApp;
+import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+// Loader hide
+window.onload = () => { document.getElementById('loader').style.display='none'; }
+
+// Telegram user
 let userID = tg.initDataUnsafe?.user?.id || 0;
 document.getElementById('user-id').innerText = userID;
+
 const db = getDatabase();
 
-// Инициализация пользователя
-function initUser(){
+// Создать запись пользователя если нет
+function initUser() {
   const userRef = ref(db,'users/'+userID);
   get(userRef).then(snapshot=>{
     if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0,taskStatus:{}});
+      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
     }
   });
 }
 initUser();
 
-// Обновление UI и кнопок
+// Обновление баланса и энергии
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
   onValue(userRef, snapshot=>{
@@ -217,62 +214,54 @@ function updateUI(){
       document.getElementById("done-tasks").innerText = data.doneTasks;
       document.getElementById("failed-tasks").innerText = data.failedTasks;
       const histDiv = document.getElementById("history");
-      histDiv.innerHTML="";
+      histDiv.innerHTML = "";
       data.history?.forEach(h=>{
-        const d = document.createElement("div"); d.innerText=h; histDiv.prepend(d);
+        const d = document.createElement("div");
+        d.innerText = h;
+        histDiv.prepend(d);
       });
+      // реферал
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
-
-      // Админка
-      const adminID=7020322752;
-      const adminContainer=document.getElementById('admin-btn-container');
-      if(userID==adminID && !adminContainer.hasChildNodes()){
-        const btn=document.createElement('button');
-        btn.className='btn';
-        btn.innerText='Админка';
-        btn.onclick=()=>alert('Админка откроется здесь!');
-        adminContainer.appendChild(btn);
-      }
     }
   });
 }
 updateUI();
 
-// Pages
-function show(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
-  if(id=='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
-  if(id=='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
-  if(id=='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
-}
-
 // Clicker
 function tap(){
   const userRef = ref(db,'users/'+userID);
   get(userRef).then(snapshot=>{
-    const data=snapshot.val();
+    const data = snapshot.val();
     if(data.energy<=0){alert("Энергия закончилась"); return;}
     update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
   });
 }
 
 // Copy referral
-function copyRef(){navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`); alert("Скопировано!");}
+function copyRef(){
+  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  navigator.clipboard.writeText(link);
+  alert("Скопировано!");
+}
 
-// Tasks
-const taskListDiv=document.getElementById("task-list");
+// Pages
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Задания
+const taskListDiv = document.getElementById("task-list");
 function loadTasks(){
-  const tasksRef=ref(db,'tasks');
-  onValue(tasksRef,snapshot=>{
+  const tasksRef = ref(db,'tasks');
+  onValue(tasksRef, snapshot=>{
     taskListDiv.innerHTML="";
     snapshot.forEach(child=>{
-      const t=child.val();
-      const btn=document.createElement("div");
+      const t = child.val();
+      const btn = document.createElement("div");
       btn.className="btn";
-      btn.innerText=t.name;
-      btn.onclick=()=>openTask(t,child.key);
+      btn.innerText = t.name;
+      btn.onclick = ()=>openTask(t,child.key);
       taskListDiv.appendChild(btn);
     });
   });
@@ -281,31 +270,28 @@ loadTasks();
 
 let currentTaskID=null;
 function openTask(task,key){
-  currentTaskID=key;
-  const userRef=ref(db,'users/'+userID+'/taskStatus/'+key);
+  currentTaskID = key;
+  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
   get(userRef).then(snapshot=>{
     if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-    document.getElementById("task-title").innerText=task.name;
-    document.getElementById("task-desc").innerText=task.desc;
-    document.getElementById("task-link-btn").onclick=()=>window.open(task.link,"_blank");
+    document.getElementById("task-title").innerText = task.name;
+    document.getElementById("task-desc").innerText = task.desc;
+    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
     show('taskView');
   });
 }
-function showReport(){show('report');}
+
+function showReport(){ show('report'); }
 function sendReport(){
-  const reportText=document.getElementById("report-text").value;
+  const reportText = document.getElementById("report-text").value;
   if(!reportText){alert("Введите отчёт"); return;}
   const updates={};
   updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`]=push(ref(db,`tasks/${currentTaskID}/reports`)).key;
+  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key; 
   update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
 }
-function backToTasks(){show('tasks');}
-
-// Скрываем загрузку после восстановления данных
-window.addEventListener('load',()=>{
-  setTimeout(()=>document.getElementById('loading').style.display='none',800);
-});
+function backToTasks(){ show('tasks'); }
 </script>
+
 </body>
 </html>
