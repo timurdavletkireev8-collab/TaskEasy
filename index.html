@@ -4,57 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EASY MONEY</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-  authDomain: "cash-1968a.firebaseapp.com",
-  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-  projectId: "cash-1968a",
-  storageBucket: "cash-1968a.appspot.com",
-  messagingSenderId: "234016139024",
-  appId: "1:234016139024:web:f11daa0328ff06173d2795",
-  measurementId: "G-MFEKWBVN21"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-export { db, ref, set, get, onValue, update, push, remove };
-</script>
 
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:Arial,sans-serif;color:white;overflow:hidden;}
-body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;}
+html,body{
+  margin:0;
+  height:100%;
+  font-family:Arial,sans-serif;
+  color:white;
+}
+body{
+  background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;
+}
 
 /* TOP */
-.top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;}
-.title{font-size:22px;font-weight:900;padding:8px 14px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.8);border-radius:16px;backdrop-filter:blur(6px);}
-.balance{padding:10px 14px;background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.8);border-radius:16px;cursor:pointer;}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 20px;
+}
+.title{
+  font-size:22px;
+  font-weight:900;
+  padding:8px 14px;
+  background:rgba(255,255,255,0.12);
+  border:2px solid rgba(255,255,255,0.8);
+  border-radius:16px;
+  backdrop-filter:blur(6px);
+}
+.balance{
+  padding:10px 14px;
+  background:rgba(0,0,0,0.55);
+  border:2px solid rgba(255,255,255,0.8);
+  border-radius:16px;
+  cursor:pointer;
+}
 
 /* PAGES */
-.page{display:none;padding:20px;height:calc(100% - 150px);overflow-y:auto;}
+.page{
+  display:none;
+  padding:20px;
+  height:calc(100% - 150px);
+  overflow-y:auto;
+}
 .page.active{display:block}
 
 /* CARD */
-.card{background:rgba(0,0,0,0.45);border:2px solid rgba(255,255,255,0.8);border-radius:22px;padding:20px;margin-bottom:20px;}
+.card{
+  background:rgba(0,0,0,0.45);
+  border:2px solid rgba(255,255,255,0.8);
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:20px;
+}
 
 /* BUTTON */
-.btn{width:100%;padding:16px;margin-top:14px;font-size:16px;font-weight:600;color:white;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.8);border-radius:18px;cursor:pointer;}
-.btn-red{background:rgba(255,0,0,0.35);}
+.btn{
+  width:100%;
+  padding:16px;
+  margin-top:14px;
+  font-size:16px;
+  font-weight:600;
+  color:white;
+  background:rgba(0,0,0,0.5);
+  border:2px solid rgba(255,255,255,0.8);
+  border-radius:18px;
+  cursor:pointer;
+}
+.btn-red{
+  background:rgba(255,0,0,0.35);
+}
 
 /* NAV */
-.nav{position:fixed;bottom:0;width:100%;height:90px;background:rgba(0,0,0,0.6);display:flex;justify-content:space-around;align-items:center;}
-.nav img{width:48px;height:48px;opacity:0.6;cursor:pointer;}
-.nav img.active{opacity:1;}
+.nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  height:90px;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+}
+.nav img{
+  width:48px;
+  height:48px;
+  opacity:0.6;
+  cursor:pointer;
+}
+.nav img.active{
+  opacity:1;
+}
 
 /* CLICK */
-.click-img{width:200px;height:200px;margin:30px auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.9);}
+.click-img{
+  width:200px;
+  height:200px;
+  margin:30px auto;
+  display:block;
+  border-radius:24px;
+  border:3px solid rgba(255,255,255,0.9);
+}
 </style>
 </head>
 <body>
@@ -90,29 +143,8 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 <div id="tasks" class="page">
   <div class="card">
     <h3>Задания</h3>
-    <div id="task-list"></div>
+    <p>Скоро появятся</p>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-  </div>
-</div>
-
-<!-- TASK VIEW -->
-<div id="taskView" class="page">
-  <div class="card">
-    <h3 id="task-title"></h3>
-    <p id="task-desc"></p>
-    <button class="btn" id="task-link-btn">Перейти по ссылке</button>
-    <button class="btn" onclick="showReport()">Отправить отчёт</button>
-    <button class="btn btn-red" onclick="showPage('tasks')">Назад</button>
-  </div>
-</div>
-
-<!-- REPORT -->
-<div id="report" class="page">
-  <div class="card">
-    <h3>Отчёт</h3>
-    <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
-    <button class="btn" onclick="sendReport()">Отправить</button>
-    <button class="btn btn-red" onclick="showPage('taskView')">Назад</button>
   </div>
 </div>
 
@@ -121,7 +153,9 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
   <div class="card">
     <p>Каждый клик +0.005₽</p>
     <p>Энергия: <span id="energy">1000</span>/1000</p>
-    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <img class="click-img"
+      src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png"
+      onclick="tap()">
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
@@ -138,7 +172,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 <!-- WITHDRAW -->
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>Вывод средств</h3>
+    <h3>Вывод</h3>
     <p>Скоро</p>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
@@ -150,90 +184,52 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
     <h3>Информация</h3>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <div id="admin-panel"></div>
   </div>
 </div>
 
 <!-- NAV -->
 <div class="nav">
-  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn')" class="active">
-  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile')">
-  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info')">
+  <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', event)" class="active">
+  <img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png" onclick="nav('profile', event)">
+  <img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png" onclick="nav('info', event)">
 </div>
 
-<script type="module">
-import { db, ref, set, get, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
+<script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let uid = tg.initDataUnsafe?.user?.id || 0;
-document.getElementById("uid").innerText = uid;
-document.getElementById("refLink").innerText = `https://t.me/DifferentEarningsBot?start=${uid}`;
-
 let balance = 0;
 let energy = 1000;
+let uid = tg.initDataUnsafe?.user?.id || 0;
 
-// INIT USER
-function initUser(){
-  const userRef = ref(db, `users/${uid}`);
-  get(userRef).then(snap=>{
-    if(!snap.exists()){
-      set(userRef,{balance:0,energy:1000,referrals:0,taskStatus:{},doneTasks:0,failedTasks:0,history:[]});
-    }
-  });
-}
-initUser();
+document.getElementById("uid").innerText = uid;
+document.getElementById("refLink").innerText =
+  "https://t.me/DifferentEarningsBot?start=" + uid;
 
-// UPDATE UI
-function updateUI(){
-  const userRef = ref(db, `users/${uid}`);
-  onValue(userRef,snap=>{
-    const data = snap.val();
-    if(!data) return;
-    balance = data.balance;
-    energy = data.energy;
-    document.getElementById("balance").innerText = balance.toFixed(2);
-    document.getElementById("energy").innerText = energy;
-  });
-}
-updateUI();
-
-// NAVIGATION
 function showPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 
-function nav(id){
+function nav(id, e){
   document.querySelectorAll(".nav img").forEach(i=>i.classList.remove("active"));
-  event.target.classList.add("active");
+  e.currentTarget.classList.add("active");
   showPage(id);
 }
 
-// CLICKER
 function tap(){
-  if(energy<=0){alert("Энергия закончилась"); return;}
+  if(energy<=0){alert("Энергия закончилась");return;}
   energy--;
   balance += 0.005;
   document.getElementById("energy").innerText = energy;
   document.getElementById("balance").innerText = balance.toFixed(3);
-  update(ref(db, `users/${uid}`), {balance, energy});
 }
 
-// COPY REF
 function copyRef(){
   navigator.clipboard.writeText(document.getElementById("refLink").innerText);
   alert("Ссылка скопирована");
 }
-
-// ADMIN PANEL
-if(uid==7020322752){
-  const adminDiv = document.getElementById("admin-panel");
-  adminDiv.innerHTML = `<h3>АДМИНКА</h3><button class="btn" onclick="showPage('admin')">Открыть админку</button>`;
-}
-
-// TODO: Admin page, tasks, reports, payouts
 </script>
+
 </body>
 </html>
