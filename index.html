@@ -5,185 +5,138 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Easy Money</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-  authDomain: "cash-1968a.firebaseapp.com",
-  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-  projectId: "cash-1968a",
-  storageBucket: "cash-1968a.firebasestorage.app",
-  messagingSenderId: "234016139024",
-  appId: "1:234016139024:web:f11daa0328ff06173d2795",
-  measurementId: "G-MFEKWBVN21"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-const userID = tg.initDataUnsafe?.user?.id || Date.now();
-const adminID = 7020322752;
-
-// Инициализация пользователя
-const userRef = ref(db,'users/'+userID);
-get(userRef).then(snap=>{
-  if(!snap.exists()){
-    set(userRef,{
-      balance:0,
-      energy:1000,
-      referrals:0,
-      completedTasks:0,
-      rejectedTasks:0
-    });
-  }
-});
-
-// Обновление UI
-onValue(userRef, snap=>{
-  const data = snap.val();
-  if(data){
-    document.getElementById('balance-text').innerText = data.balance.toFixed(3);
-    document.getElementById('completed-tasks').innerText = data.completedTasks;
-    document.getElementById('rejected-tasks').innerText = data.rejectedTasks;
-    const percent = (data.energy/1000)*100;
-    document.getElementById("energy-bar").style.width = percent+"%";
-    document.getElementById("energy-text").innerText = `Энергия: ${data.energy}/1000`;
-  }
-});
-
-// Навигация
-window.showPage = function(id){
-  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-  document.getElementById(id).style.display='block';
-}
-
-// Заработок на кликах
-window.tap = function(){
-  get(userRef).then(snap=>{
-    let data = snap.val();
-    if(data.energy<=0){alert("Энергия закончилась"); return;}
-    update(userRef,{
-      balance: +(data.balance+0.005).toFixed(3),
-      energy: data.energy-1
-    });
-  });
-}
-
-// Рефералы
-window.showReferral = function(){
-  showPage('referral');
-  document.getElementById('ref-link').value = `https://t.me/DifferentEarningsBot?start=${userID}`;
-}
-window.copyReferral = function(){
-  const copyText = document.getElementById('ref-link');
-  copyText.select();
-  navigator.clipboard.writeText(copyText.value);
-  alert('Ссылка скопирована!');
-}
-
-// Профиль
-onValue(userRef, snap=>{
-  const data = snap.val();
-  if(data) document.getElementById('user-id').innerText = userID;
-});
-
-// Админ
-if(userID==adminID){
-  document.getElementById('admin-btn').style.display='block';
-}
-
-</script>
 <style>
-body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;background:url('https://i.postimg.cc/dQ2QDSbQ/Picsart-26-01-03-04-31-27-278.png') center/cover no-repeat;}
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px;height:80px;background:rgba(0,0,0,0.5);}
-.title{font-size:36px;font-weight:bold;}
-.balance{cursor:pointer;}
-.page{display:none;padding:20px;height:calc(100% - 80px);}
-.page.active{display:block;}
-.btn{padding:14px 22px;border-radius:15px;background:rgba(0,0,0,0.6);border:2px solid white;color:white;font-weight:bold;margin:10px;cursor:pointer;display:inline-block;}
-.btn-red{background:rgba(255,0,0,0.4);}
-.card{background:rgba(0,0,0,0.5);border-radius:20px;padding:20px;margin-bottom:15px;}
-.nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;padding:10px;background:rgba(0,0,0,0.5);}
-.nav button{flex:1;margin:0 5px;}
-.click-img{width:180px;height:180px;display:block;margin:20px auto;border-radius:20px;border:3px solid white;}
-.energy-container{background:rgba(255,255,255,0.2);height:24px;border-radius:12px;position:relative;margin:12px 0;}
-#energy-bar{background:#00ffcc;height:100%;width:100%;border-radius:12px;transition:width .2s;}
-#energy-text{position:absolute;left:50%;top:0;transform:translateX(-50%);color:white;font-weight:bold;}
+:root {
+  --black-glass: rgba(0,0,0,0.6);
+  --white-border: rgba(255,255,255,0.8);
+}
+
+body {
+  margin:0;
+  font-family:'Arial Black', sans-serif;
+  background: radial-gradient(circle at center,#1b3d2f 0%,#000 100%);
+  color:white;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.top-bar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px;
+  background: var(--black-glass);
+}
+
+.top-bar .title {
+  font-size:36px;
+  font-weight:bold;
+}
+
+.top-bar .balance {
+  font-size:20px;
+  cursor:pointer;
+}
+
+.main-container {
+  flex:1;
+  padding:20px;
+  overflow-y:auto;
+}
+
+.page { display:none; }
+.page.active { display:block; }
+
+.card {
+  background: var(--black-glass);
+  border-radius:20px;
+  border:2px solid var(--white-border);
+  padding:20px;
+  margin-bottom:15px;
+}
+
+.btn {
+  display:inline-block;
+  padding:14px 22px;
+  border-radius:15px;
+  background: var(--black-glass);
+  border:2px solid var(--white-border);
+  color:white;
+  font-weight:bold;
+  margin:10px 0;
+  cursor:pointer;
+}
+
+.nav-bar {
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+  background: var(--black-glass);
+  border-top:2px solid var(--white-border);
+  position:fixed;
+  bottom:0;
+  width:100%;
+}
+
+.nav-bar .nav-btn {
+  flex:1;
+  margin:0 5px;
+  font-size:20px;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
 
-<div class="top">
+<div class="top-bar">
   <div class="title">EASY MONEY</div>
   <div class="balance" onclick="alert('Вывод средств')">Баланс: <span id="balance-text">0</span>₽</div>
 </div>
 
-<!-- Заработок -->
-<div id="earn" class="page active">
-  <div class="card"><button class="btn" onclick="showReferral()">Заработок на рефералах</button></div>
-  <div class="card"><button class="btn">Заработок на заданиях</button></div>
-  <div class="card"><button class="btn" onclick="showPage('clicker')">Заработок на кликах</button></div>
-</div>
-
-<!-- Рефералы -->
-<div id="referral" class="page">
-  <div class="card">
-    <p>Приглашайте друзей и зарабатывайте 10₽ + 200 энергии с каждого!</p>
-    <input id="ref-link" value="" readonly style="width:100%;padding:10px;border-radius:10px;text-align:center;">
-    <button class="btn btn-red" onclick="copyReferral()">Скопировать</button>
-    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
+<div class="main-container">
+  <!-- Заработок -->
+  <div id="earn" class="page active">
+    <div class="card"><button class="btn" onclick="alert('Заработок на рефералах')">Заработок на рефералах</button></div>
+    <div class="card"><button class="btn" onclick="alert('Заработок на заданиях')">Заработок на заданиях</button></div>
+    <div class="card"><button class="btn" onclick="alert('Заработок на кликах')">Заработок на кликах</button></div>
   </div>
-</div>
 
-<!-- Кликер -->
-<div id="clicker" class="page">
-  <div class="card">
-    <div class="energy-container">
-      <div id="energy-bar"></div>
-      <span id="energy-text">Энергия: 1000/1000</span>
+  <!-- Профиль -->
+  <div id="profile" class="page">
+    <div class="card">
+      <p>ID: <span id="user-id">12345</span></p>
+      <p>Фото Telegram</p>
+      <p>Выполнено заданий: <span id="completed-tasks">0</span></p>
+      <p>Отклонено заданий: <span id="rejected-tasks">0</span></p>
+      <button class="btn" onclick="alert('Вывести средства')">Вывести</button>
     </div>
-    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
-    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
+  </div>
+
+  <!-- Информация -->
+  <div id="info" class="page">
+    <div class="card">
+      <button class="btn" onclick="window.open('https://t.me/news','_blank')">Новости</button>
+      <button class="btn" onclick="window.open('https://t.me/sup','_blank')">Поддержка</button>
+    </div>
   </div>
 </div>
 
-<!-- Профиль -->
-<div id="profile" class="page">
-  <div class="card">
-    <p>ID: <span id="user-id"></span></p>
-    <p>Фото Telegram</p>
-    <p>Выполнено заданий: <span id="completed-tasks">0</span></p>
-    <p>Отклонено заданий: <span id="rejected-tasks">0</span></p>
-    <button class="btn btn-red">Вывести</button>
-  </div>
+<div class="nav-bar">
+  <div class="nav-btn" onclick="showPage('earn')">💰</div>
+  <div class="nav-btn" onclick="showPage('profile')">👤</div>
+  <div class="nav-btn" onclick="showPage('info')">ℹ️</div>
 </div>
 
-<!-- Информация -->
-<div id="info" class="page">
-  <div class="card">
-    <button class="btn" onclick="window.open('https://t.me/news','_blank')">Новости</button>
-    <button class="btn" onclick="window.open('https://t.me/sup','_blank')">Поддержка</button>
-    <button class="btn" style="display:none;" id="admin-btn" onclick="showPage('admin')">Админка</button>
-  </div>
-</div>
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-<!-- Админка -->
-<div id="admin" class="page">
-  <div class="card">
-    <p>Добавление/удаление заданий и проверка отчетов</p>
-    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-  </div>
-</div>
-
-<div class="nav">
-  <button onclick="showPage('earn')">💰</button>
-  <button onclick="showPage('profile')">👤</button>
-  <button onclick="showPage('info')">ℹ️</button>
-</div>
-
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+</script>
 </body>
 </html>
