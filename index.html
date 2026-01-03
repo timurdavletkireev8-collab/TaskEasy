@@ -12,8 +12,8 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:44px;font-weight:900;}
-.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);}
+.title{font-size:60px;font-weight:900;line-height:1.1;} /* намного жирнее */
+.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
 .page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
@@ -23,7 +23,8 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 .card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
 
 /* BUTTONS */
-.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;}
+.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
+.btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
 
 /* INPUT */
 input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
@@ -41,15 +42,26 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance">Баланс: <span id="balance">0</span>₽</div>
+  <div class="balance" onclick="show('withdraw')">Баланс: <span id="balance">0</span>₽</div>
 </div>
 
 <!-- ЗАРАБОТОК -->
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="openRef()">Заработок на рефералах</button>
+    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
     <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
     <button class="btn" onclick="show('click')">Заработок на кликах</button>
+  </div>
+</div>
+
+<!-- РЕФЕРАЛЫ -->
+<div id="referral" class="page">
+  <div class="card">
+    <h3>Приглашайте друзей и зарабатывайте</h3>
+    <p>1 друг = <b>10₽</b> + 200 энергии</p>
+    <p id="ref-link"></p>
+    <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -58,7 +70,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   <div class="card">
     <h3>Задания</h3>
     <div class="btn" onclick="openTask('Подписка на канал','Подпишитесь на канал и отправьте скриншот','https://t.me/news',20)">Подписка на канал</div>
-    <div class="btn" onclick="show('earn')">Назад</div>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -67,10 +79,9 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   <div class="card">
     <h3 id="task-title"></h3>
     <p id="task-desc"></p>
-
     <button class="btn" id="task-link-btn">Перейти по ссылке</button>
     <button class="btn" onclick="showReport()">Отправить отчёт</button>
-    <button class="btn" onclick="backToTasks()">Назад</button>
+    <button class="btn btn-red" onclick="backToTasks()">Назад</button>
   </div>
 </div>
 
@@ -80,18 +91,20 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <h3>Отчёт</h3>
     <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
     <button class="btn" onclick="sendReport()">Отправить</button>
-    <button class="btn" onclick="show('taskView')">Назад</button>
+    <button class="btn btn-red" onclick="show('taskView')">Назад</button>
   </div>
 </div>
 
 <!-- КЛИКИ -->
 <div id="click" class="page">
   <div class="card">
-    Энергия: <span id="energy">1000</span>/1000
+    <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
+    <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
+    <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
     <img class="click-img"
       src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
       onclick="tap()">
-    <button class="btn" onclick="show('earn')">Назад</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -104,6 +117,16 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
     <h4>История начислений</h4>
     <div id="history"></div>
+    <button class="btn btn-red" onclick="show('withdraw')">Вывести</button>
+  </div>
+</div>
+
+<!-- ВЫВОД -->
+<div id="withdraw" class="page">
+  <div class="card">
+    <h3>Вывод средств</h3>
+    <p>Здесь можно вывести баланс.</p>
+    <button class="btn btn-red" onclick="show('profile')">Назад</button>
   </div>
 </div>
 
@@ -133,24 +156,25 @@ let energy = 1000;
 let userID = tg.initDataUnsafe?.user?.id || 0;
 const adminID = 7020322752;
 let taskStatus = {}; // taskID: "on_check", "done"
-
 document.getElementById('user-id').innerText = userID;
 
-// Show admin button
+// Admin button
 if(userID === adminID){
   const container = document.getElementById('admin-btn-container');
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.innerText = 'Админка';
-  btn.onclick = ()=>alert('Откроется админка для добавления/проверки заданий');
+  btn.onclick = ()=>alert('Откроется админка');
   container.appendChild(btn);
 }
 
+// Pages
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+// Clicker
 function tap(){
   if(energy<=0){alert('Энергия закончилась'); return;}
   energy--; balance +=0.005; balance = +balance.toFixed(3);
@@ -158,11 +182,19 @@ function tap(){
   document.getElementById("balance").innerText = balance;
 }
 
-function openRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  alert(`Приглашайте друзей:\n10₽ + 200 энергии\n\n${link}`);
+// Referral
+function showReferral(){
+  show('referral');
 }
+function copyRef(){
+  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  document.getElementById('ref-link').innerText = link;
+  navigator.clipboard.writeText(link);
+  alert("Ссылка скопирована!");
+}
+function openRef(){ show('referral'); copyRef(); }
 
+// Tasks
 function openTask(title, desc, link, price){
   if(taskStatus[title] === "on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
   document.getElementById("task-title").innerText = title;
@@ -170,11 +202,7 @@ function openTask(title, desc, link, price){
   document.getElementById("task-link-btn").onclick = ()=>window.open(link,"_blank");
   show('taskView');
 }
-
-function showReport(){
-  show('report');
-}
-
+function showReport(){ show('report'); }
 function sendReport(){
   const text = document.getElementById("report-text").value;
   if(!text){alert("Введите отчёт"); return;}
@@ -182,10 +210,8 @@ function sendReport(){
   taskStatus[document.getElementById("task-title").innerText] = "on_check";
   show('tasks');
 }
-
-function backToTasks(){
-  show('tasks');
-}
+function backToTasks(){ show('tasks'); }
 </script>
+
 </body>
 </html>
