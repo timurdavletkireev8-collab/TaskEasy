@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EASY MONEY - FULL RECOVERY</title>
+<title>EASY MONEY - ВЕРСИЯ СО ВСЕМИ ФУНКЦИЯМИ</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
@@ -34,37 +34,34 @@
 
   const userRef = ref(window.db, "users/" + uid);
 
-  // ЛОАДЕР
+  // 1. ЗАГРУЗКА
   setTimeout(() => { document.getElementById("loader").style.display = "none"; }, 2500);
 
-  // ЭНЕРГИЯ 24 ЧАСА
+  // 2. ЭНЕРГИЯ (24 ЧАСА) + ИНИЦИАЛИЗАЦИЯ
   get(userRef).then(snap => {
     const now = Date.now();
     if(snap.exists()){
       const d = snap.val();
       if(now - (d.lastReset || 0) > 86400000) update(userRef, {energy: 1000, lastReset: now});
     } else {
-      set(userRef, {balance:0, energy:1000, lastReset: now, uid: uid});
+      set(userRef, {balance:0, energy:1000, lastReset: now, uid: uid, referrals: 0});
     }
   });
 
-  // ОБНОВЛЕНИЕ ДАННЫХ
-  onValue(userRef, snapshot => {
-    const data = snapshot.val();
-    if(data){
-      balance = data.balance || 0;
-      energy = data.energy || 0;
+  // 3. СИНХРОНИЗАЦИЯ ДАННЫХ
+  onValue(userRef, s => {
+    const d = s.val();
+    if(d){
+      balance = d.balance || 0; energy = d.energy || 0;
       document.getElementById("balance").innerText = balance.toFixed(2);
       document.getElementById("energy").innerText = energy;
-      document.getElementById("uid").innerText = uid;
+      document.getElementById("uid_txt").innerText = uid;
       if(tg.initDataUnsafe?.user?.photo_url) document.getElementById("profilePic").src = tg.initDataUnsafe.user.photo_url;
-      
-      const img = document.querySelector(".click-img");
-      img.style.opacity = energy <= 0 ? "0.4" : "1";
+      document.querySelector(".click-img").style.opacity = energy <= 0 ? "0.4" : "1";
     }
   });
 
-  // ИСТОРИЯ И ОТЧЕТЫ
+  // 4. ИСТОРИЯ И ЗАДАНИЯ
   onValue(ref(window.db, "reports"), s => {
     userReports = {};
     const h1 = document.getElementById("h-earn"), h2 = document.getElementById("h-done"), h3 = document.getElementById("h-bad");
@@ -80,51 +77,58 @@
     });
   });
 
-  // ЗАДАНИЯ
   onValue(ref(window.db, "tasks"), s => {
     const list = document.getElementById("task-list");
     list.innerHTML = "";
     s.forEach(child => {
       const t = child.val();
-      const div = document.createElement("div");
-      div.className = "card task-item";
       const st = userReports[child.key] || "";
       const icon = st === "pending" ? "⏳" : (st === "approved" ? "✅" : "");
+      const div = document.createElement("div");
+      div.className = "card";
       div.innerHTML = `<span>${t.name} ${icon}</span> <b>${t.price}₽</b>`;
       div.onclick = () => openTask(child.key, t);
       list.appendChild(div);
     });
   });
 
-  // АДМИНКА
+  // 5. АДМИН-ФУНКЦИИ (ВСЁ ВОЗВРАЩЕНО)
   if(uid === adminID) {
     document.getElementById("admin-entry").style.display = "block";
     onValue(ref(window.db, "reports"), s => {
-      const cont = document.getElementById("adm-reports");
+      const cont = document.getElementById("adm-reports-list");
       cont.innerHTML = "";
       s.forEach(c => {
         const r = c.val();
         if(r.status === "pending") {
-          const d = document.createElement("div");
-          d.className = "card";
-          d.innerHTML = `ID: ${r.uid}<br>Отчет: ${r.info}<br>
+          cont.innerHTML += `<div class="card">Юзер: ${r.uid}<br>Отчет: ${r.info}<br>
             <button class="btn" style="background:green" onclick="approveTask('${c.key}')">Одобрить</button>
-            <button class="btn btn-red" onclick="rejectTask('${c.key}')">Отклонить</button>`;
-          cont.appendChild(d);
+            <button class="btn btn-red" onclick="rejectTask('${c.key}')">Отклонить</button></div>`;
         }
       });
     });
+    onValue(ref(window.db, "withdrawals"), s => {
+        const cont = document.getElementById("adm-withdraw-list");
+        cont.innerHTML = "";
+        s.forEach(c => {
+            const w = c.val();
+            if(w.status === "pending") {
+                cont.innerHTML += `<div class="card">Юзер: ${w.uid}<br>Карта: ${w.card}<br>Сумма: ${w.sum}₽<br>
+                <button class="btn" style="background:green" onclick="approveW('${c.key}')">Выплачено</button></div>`;
+            }
+        });
+    });
     onValue(ref(window.db, "logs"), s => {
-        const cont = document.getElementById("adm-logs");
+        const cont = document.getElementById("adm-logs-list");
         cont.innerHTML = "";
         let logs = []; s.forEach(c => logs.push(c.val()));
-        logs.reverse().slice(0, 50).forEach(l => {
-            cont.innerHTML += `<div style="font-size:10px; border-bottom:1px solid #444; margin-bottom:2px;">[${l.time}] ${l.msg}</div>`;
+        logs.reverse().slice(0, 40).forEach(l => {
+            cont.innerHTML += `<div style="font-size:10px; border-bottom:1px solid #444;">[${l.time}] ${l.msg}</div>`;
         });
     });
   }
 
-  // ФУНКЦИИ
+  // ФУНКЦИИ ОКНО/НАВИГАЦИЯ
   window.showPage = id => {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -157,8 +161,27 @@
     const info = document.getElementById("t-input").value;
     if(!info) return alert("Введите отчет!");
     push(ref(window.db, "reports"), {uid, taskId: id, taskName: task.name, info, price: task.price, status: "pending"});
-    logAction(`Юзер ${uid} отправил отчет: ${task.name}`);
+    logAction(`Юзер отправил отчет: ${task.name}`);
     showPage('tasks');
+  };
+
+  window.sendWithdraw = () => {
+      const card = document.getElementById("w-card").value;
+      const sum = Number(document.getElementById("w-sum").value);
+      if(sum < 100 || sum > balance) return alert("Ошибка суммы");
+      update(userRef, {balance: balance - sum});
+      push(ref(window.db, "withdrawals"), {uid, card, sum, status: "pending"});
+      logAction(`Заявка на вывод: ${sum}₽`);
+      alert("Успешно!");
+  };
+
+  window.addTask = () => {
+      const name = document.getElementById("a-name").value;
+      const desc = document.getElementById("a-desc").value;
+      const link = document.getElementById("a-link").value;
+      const price = Number(document.getElementById("a-price").value);
+      push(ref(window.db, "tasks"), {name, desc, link, price});
+      alert("Задание добавлено");
   };
 
   window.approveTask = id => {
@@ -168,14 +191,19 @@
       get(uR).then(us => {
         update(uR, {balance: (us.val().balance || 0) + r.price});
         update(ref(window.db, `reports/${id}`), {status: "approved"});
-        logAction(`Админ ОДОБРИЛ задачу юзера ${r.uid} (+${r.price}₽)`, true);
+        logAction(`Админ ОДОБРИЛ задачу ${r.uid} (+${r.price}₽)`);
       });
     });
   };
 
   window.rejectTask = id => {
     update(ref(window.db, `reports/${id}`), {status: "rejected"});
-    logAction(`Админ ОТКЛОНИЛ задачу`, true);
+    logAction(`Админ ОТКЛОНИЛ задачу`);
+  };
+
+  window.approveW = id => {
+      update(ref(window.db, `withdrawals/${id}`), {status: "done"});
+      logAction("Админ ПОДТВЕРДИЛ выплату");
   };
 
   window.logAction = (msg) => {
@@ -191,16 +219,16 @@ body{margin:0;height:100vh;font-family:sans-serif;color:white;background:url("ht
 .loader-logo{width:100px;animation:p 1.5s infinite;}
 @keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 .top{display:flex;justify-content:space-between;padding:15px;align-items:center;}
-.title{font-weight:900;border:1px solid white;padding:5px 10px;border-radius:10px;background:rgba(255,255,255,0.1);}
+.title{font-weight:900;border:1px solid white;padding:5px 10px;border-radius:10px;background:rgba(255,255,255,0.1);backdrop-filter:blur(5px);}
 .page{display:none;padding:20px;height:calc(100vh - 150px);overflow-y:auto;}
 .active{display:block}
-.card{background:rgba(0,0,0,0.5);border:1px solid white;border-radius:15px;padding:15px;margin-bottom:15px;}
-.btn{width:100%;padding:12px;margin-top:10px;background:rgba(0,0,0,0.4);border:1px solid white;color:white;border-radius:10px;font-weight:bold;cursor:pointer;}
-.btn-red{background:rgba(255,0,0,0.2);border-color:#ff5555;}
+.card{background:rgba(0,0,0,0.55);border:1px solid white;border-radius:15px;padding:15px;margin-bottom:15px;}
+.btn{width:100%;padding:13px;margin-top:10px;background:rgba(0,0,0,0.4);border:1px solid white;color:white;border-radius:10px;font-weight:bold;cursor:pointer;}
+.btn-red{background:rgba(255,0,0,0.25);border-color:#ff4444;}
 .nav{position:fixed;bottom:0;width:100%;height:80px;background:rgba(0,0,0,0.8);display:flex;justify-content:space-around;align-items:center;}
-.nav img{width:35px;opacity:0.5;}
+.nav img{width:38px;opacity:0.5;}
 .nav img.active{opacity:1;}
-.click-img{width:180px;margin:20px auto;display:block;border-radius:20px;border:2px solid white;}
+.click-img{width:190px;margin:20px auto;display:block;border-radius:20px;border:2px solid white;}
 input, textarea{width:100%;padding:10px;margin-top:10px;background:rgba(0,0,0,0.3);border:1px solid white;color:white;border-radius:8px;}
 </style>
 </head>
@@ -237,24 +265,23 @@ input, textarea{width:100%;padding:10px;margin-top:10px;background:rgba(0,0,0,0.
 
 <div id="task-view" class="page">
   <div class="card">
-    <h3 id="t-name"></h3>
-    <p id="t-desc"></p>
+    <h3 id="t-name"></h3><p id="t-desc"></p>
     <p>Награда: <span id="t-price"></span>₽</p>
     <button class="btn" id="t-link" style="background:#0088cc">Перейти</button>
-    <textarea id="t-input" placeholder="Отчет (ник, скрин и тд)"></textarea>
-    <button class="btn" id="t-send" style="background:green">Отправить отчет</button>
+    <textarea id="t-input" placeholder="Ваш отчет..."></textarea>
+    <button class="btn" id="t-send" style="background:green">Отправить</button>
     <button class="btn btn-red" onclick="showPage('tasks')">Назад</button>
   </div>
 </div>
 
 <div id="profile" class="page">
   <div class="card" style="text-align:center">
-    <img id="profilePic" src="https://via.placeholder.com/80" style="width:80px; border-radius:50%; margin-bottom:10px;">
-    <p>ID: <span id="uid"></span></p>
+    <img id="profilePic" src="https://via.placeholder.com/80" style="width:80px; border-radius:50%; margin-bottom:10px; border:2px solid white;">
+    <p>ID: <span id="uid_txt"></span></p>
     <button class="btn" onclick="showPage('h1')">💰 Начисления</button>
     <button class="btn" onclick="showPage('h2')">✅ Выполненные</button>
     <button class="btn" onclick="showPage('h3')">❌ Отклонённые</button>
-    <button class="btn btn-red" onclick="showPage('withdraw')">Вывести</button>
+    <button class="btn btn-red" onclick="showPage('withdraw')" style="margin-top:20px">Вывести</button>
   </div>
 </div>
 
@@ -264,19 +291,18 @@ input, textarea{width:100%;padding:10px;margin-top:10px;background:rgba(0,0,0,0.
 
 <div id="referral" class="page">
   <div class="card">
-    <h3>Рефералы</h3>
-    <p>Тут ваша ссылка (автоматически):</p>
-    <button class="btn" onclick="alert('Скопировано')">Копировать</button>
+    <h3>Реферальная программа</h3>
+    <button class="btn" onclick="alert('Скопировано!')">Копировать ссылку</button>
     <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
 <div id="withdraw" class="page">
   <div class="card">
-    <h3>Вывод</h3>
-    <input placeholder="Карта">
-    <input type="number" placeholder="Сумма">
-    <button class="btn">Вывести</button>
+    <h3>Вывод средств</h3>
+    <input id="w-card" placeholder="Номер карты">
+    <input id="w-sum" type="number" placeholder="Сумма (от 100₽)">
+    <button class="btn" onclick="sendWithdraw()">Создать заявку</button>
     <button class="btn btn-red" onclick="showPage('profile')">Назад</button>
   </div>
 </div>
@@ -285,19 +311,33 @@ input, textarea{width:100%;padding:10px;margin-top:10px;background:rgba(0,0,0,0.
   <div class="card">
     <button class="btn" onclick="window.tg.openTelegramLink('https://t.me/news')">Новости</button>
     <div id="admin-entry" style="display:none">
-        <button class="btn" style="background:orange; color:black" onclick="showPage('admin-m')">АДМИНКА</button>
+        <button class="btn" style="background:orange; color:black; margin-top:20px" onclick="showPage('adm-main')">АДМИН-ПАНЕЛЬ</button>
     </div>
   </div>
 </div>
 
-<div id="admin-m" class="page">
-    <button class="btn" onclick="showPage('adm-r')">Проверка отчетов</button>
-    <button class="btn" onclick="showPage('adm-l')">Логи действий</button>
+<div id="adm-main" class="page">
+    <button class="btn" onclick="showPage('adm-add')">➕ Добавить задание</button>
+    <button class="btn" onclick="showPage('adm-check')">🔍 Проверка отчетов</button>
+    <button class="btn" onclick="showPage('adm-out')">💸 Заявки на вывод</button>
+    <button class="btn" onclick="showPage('adm-log')">📜 Логи действий</button>
     <button class="btn btn-red" onclick="showPage('info')">Назад</button>
 </div>
 
-<div id="adm-r" class="page"><div id="adm-reports"></div><button class="btn btn-red" onclick="showPage('admin-m')">Назад</button></div>
-<div id="adm-l" class="page"><div id="adm-logs" class="card"></div><button class="btn btn-red" onclick="showPage('admin-m')">Назад</button></div>
+<div id="adm-add" class="page">
+    <div class="card">
+        <input id="a-name" placeholder="Название">
+        <textarea id="a-desc" placeholder="Описание"></textarea>
+        <input id="a-link" placeholder="Ссылка">
+        <input id="a-price" type="number" placeholder="Цена">
+        <button class="btn" onclick="addTask()">Создать</button>
+        <button class="btn btn-red" onclick="showPage('adm-main')">Назад</button>
+    </div>
+</div>
+
+<div id="adm-check" class="page"><h3>Отчеты</h3><div id="adm-reports-list"></div><button class="btn btn-red" onclick="showPage('adm-main')">Назад</button></div>
+<div id="adm-out" class="page"><h3>Выплаты</h3><div id="adm-withdraw-list"></div><button class="btn btn-red" onclick="showPage('adm-main')">Назад</button></div>
+<div id="adm-log" class="page"><h3>Логи</h3><div id="adm-logs-list" class="card"></div><button class="btn btn-red" onclick="showPage('adm-main')">Назад</button></div>
 
 <div class="nav">
   <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', this)" class="active">
