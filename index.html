@@ -6,25 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-    authDomain: "cash-1968a.firebaseapp.com",
-    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-    projectId: "cash-1968a",
-    storageBucket: "cash-1968a.appspot.com",
-    messagingSenderId: "234016139024",
-    appId: "1:234016139024:web:f11daa0328ff06173d2795",
-    measurementId: "G-MFEKWBVN21"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
-
 <style>
 *{box-sizing:border-box;}
 html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
@@ -32,7 +13,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:36px;font-weight:900;line-height:1.1;text-shadow:0 0 10px rgba(255,255,255,0.7);}
+.title{font-size:36px;font-weight:900;text-shadow:0 0 10px rgba(255,255,255,0.7);}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
@@ -162,7 +143,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <!-- NAV -->
 <div class="nav">
-  <div class="active" onclick="show('earn')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png"></div>
+  <div onclick="show('earn')"><img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png"></div>
   <div onclick="show('profile')"><img src="https://i.postimg.cc/jdGK89kw/Picsart-26-01-03-07-38-38-882.png"></div>
   <div onclick="show('info')"><img src="https://i.postimg.cc/9fBhQfXL/Picsart-26-01-03-07-38-01-962.png"></div>
 </div>
@@ -170,24 +151,24 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 <script type="module">
 import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-let userID = tg.initDataUnsafe?.user?.id || 0;
-document.getElementById('user-id').innerText = userID;
 const db = getDatabase();
+const userID = tg.initDataUnsafe?.user?.id || 0;
+document.getElementById('user-id').innerText = userID;
 
+// Инициализация юзера
 function initUser() {
   const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
-    }
+  get(userRef).then(s=>{
+    if(!s.exists()){set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});}
   });
 }
 initUser();
 
+// Обновление UI
 function updateUI(){
   const userRef = ref(db,'users/'+userID);
-  onValue(userRef, snapshot=>{
-    const data = snapshot.val();
+  onValue(userRef, s=>{
+    const data = s.val();
     if(data){
       document.getElementById("balance").innerText = data.balance.toFixed(2);
       document.getElementById("energy").innerText = data.energy;
@@ -206,29 +187,32 @@ function updateUI(){
 }
 updateUI();
 
+// Кликер
 function tap(){
   const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    const data = snapshot.val();
+  get(userRef).then(s=>{
+    const data = s.val();
     if(data.energy<=0){alert("Энергия закончилась"); return;}
     update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
   });
 }
 
+// Копирование реферала
 function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  navigator.clipboard.writeText(link);
+  navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`);
   alert("Скопировано!");
 }
 
-// ПЕРЕКЛЮЧЕНИЕ ПОЛНОСТЬЮ РАБОТАЕТ
+// ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ
 function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.querySelectorAll('.nav div').forEach(d=>d.classList.remove('active'));
-  if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
-  if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
-  if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
+
+  const navItems = document.querySelectorAll('.nav div');
+  navItems.forEach(d=>d.classList.remove('active'));
+  if(id==='earn') navItems[0].classList.add('active');
+  if(id==='profile') navItems[1].classList.add('active');
+  if(id==='info') navItems[2].classList.add('active');
 }
 
 // Задания
