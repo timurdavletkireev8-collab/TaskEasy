@@ -7,23 +7,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
-    authDomain: "cash-1968a.firebaseapp.com",
-    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
-    projectId: "cash-1968a",
-    storageBucket: "cash-1968a.appspot.com",
-    messagingSenderId: "234016139024",
-    appId: "1:234016139024:web:f11daa0328ff06173d2795",
-    measurementId: "G-MFEKWBVN21"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -32,7 +17,7 @@ body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cov
 
 /* TOP */
 .top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:48px;font-weight:900;line-height:1.1;}
+.title{font-size:40px;font-weight:900;line-height:1.1;}
 .balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
 
 /* PAGES */
@@ -62,15 +47,15 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance" onclick="showPage('withdraw','nav-profile')">Баланс: <span id="balance">0</span>₽</div>
+  <div class="balance" onclick="show('withdraw')">Баланс: <span id="balance">0</span>₽</div>
 </div>
 
 <!-- ЗАРАБОТОК -->
 <div id="earn" class="page active">
   <div class="card">
-    <button class="btn" onclick="showPage('referral','nav-earn')">Заработок на рефералах</button>
-    <button class="btn" onclick="showPage('tasks','nav-earn')">Заработок на заданиях</button>
-    <button class="btn" onclick="showPage('click','nav-earn')">Заработок на кликах</button>
+    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
+    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
+    <button class="btn" onclick="show('click')">Заработок на кликах</button>
   </div>
 </div>
 
@@ -81,7 +66,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <p>1 друг = <b>10₽</b> + 200 энергии</p>
     <p id="ref-link"></p>
     <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
-    <button class="btn btn-red" onclick="showPage('earn','nav-earn')">Назад</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -90,7 +75,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   <div class="card">
     <h3>Задания</h3>
     <div id="task-list"></div>
-    <button class="btn btn-red" onclick="showPage('earn','nav-earn')">Назад</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -124,7 +109,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <img class="click-img"
       src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
       onclick="tap()">
-    <button class="btn btn-red" onclick="showPage('earn','nav-earn')">Назад</button>
+    <button class="btn btn-red" onclick="show('earn')">Назад</button>
   </div>
 </div>
 
@@ -137,7 +122,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
     <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
     <h4>История начислений</h4>
     <div id="history"></div>
-    <button class="btn btn-red" onclick="showPage('withdraw','nav-profile')">Вывести</button>
+    <button class="btn btn-red" onclick="show('withdraw')">Вывести</button>
   </div>
 </div>
 
@@ -146,7 +131,7 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
   <div class="card">
     <h3>Вывод средств</h3>
     <p>Здесь можно вывести баланс.</p>
-    <button class="btn btn-red" onclick="showPage('profile','nav-profile')">Назад</button>
+    <button class="btn btn-red" onclick="show('profile')">Назад</button>
   </div>
 </div>
 
@@ -162,81 +147,90 @@ input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;borde
 
 <!-- NAV -->
 <div class="nav">
-  <div id="nav-earn" class="active" onclick="showPage('earn','nav-earn')">💰</div>
-  <div id="nav-profile" onclick="showPage('profile','nav-profile')">👤</div>
-  <div id="nav-info" onclick="showPage('info','nav-info')">ℹ️</div>
+  <div class="active" onclick="show('earn')">💰</div>
+  <div onclick="show('profile')">👤</div>
+  <div onclick="show('info')">ℹ️</div>
 </div>
 
-<script type="module">
-import { getDatabase, ref, set, get, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+<script>
+  // Telegram
+  let tg = window.Telegram.WebApp;
+  let userID = tg.initDataUnsafe?.user?.id || 0;
+  document.getElementById('user-id').innerText = userID;
 
-let userID = tg.initDataUnsafe?.user?.id || 0;
-document.getElementById('user-id').innerText = userID;
+  // Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+    authDomain: "cash-1968a.firebaseapp.com",
+    databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+    projectId: "cash-1968a",
+    storageBucket: "cash-1968a.appspot.com",
+    messagingSenderId: "234016139024",
+    appId: "1:234016139024:web:f11daa0328ff06173d2795",
+    measurementId: "G-MFEKWBVN21"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-const db = getDatabase();
+  function initUser(){
+    const userRef = db.ref('users/'+userID);
+    userRef.once('value',snap=>{
+      if(!snap.exists()){
+        userRef.set({balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
+      }
+    });
+  }
+  initUser();
 
-function initUser() {
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    if(!snapshot.exists()){
-      set(userRef,{balance:0,energy:1000,doneTasks:0,failedTasks:0,history:[],referrals:0});
-    }
-  });
-}
-initUser();
-
-function updateUI(){
-  const userRef = ref(db,'users/'+userID);
-  onValue(userRef, snapshot=>{
-    const data = snapshot.val();
-    if(data){
+  function updateUI(){
+    const userRef = db.ref('users/'+userID);
+    userRef.on('value',snap=>{
+      const data = snap.val();
+      if(!data) return;
       document.getElementById("balance").innerText = data.balance.toFixed(2);
       document.getElementById("energy").innerText = data.energy;
       document.getElementById("done-tasks").innerText = data.doneTasks;
       document.getElementById("failed-tasks").innerText = data.failedTasks;
       const histDiv = document.getElementById("history");
-      histDiv.innerHTML = "";
-      data.history?.forEach(h=>{
-        const d = document.createElement("div");
-        d.innerText = h;
+      histDiv.innerHTML="";
+      (data.history||[]).forEach(h=>{
+        const d=document.createElement("div");
+        d.innerText=h;
         histDiv.prepend(d);
       });
       document.getElementById('ref-link').innerText = `https://t.me/DifferentEarningsBot?start=${userID}`;
-    }
-  });
-}
-updateUI();
+    });
+  }
+  updateUI();
 
-function tap(){
-  const userRef = ref(db,'users/'+userID);
-  get(userRef).then(snapshot=>{
-    const data = snapshot.val();
-    if(data.energy<=0){alert("Энергия закончилась"); return;}
-    update(userRef,{energy:data.energy-1,balance:+(data.balance+0.005).toFixed(3)});
-  });
-}
+  // Switch pages
+  function show(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));
+    if(id==='earn') document.querySelector('.nav div:nth-child(1)').classList.add('active');
+    if(id==='profile') document.querySelector('.nav div:nth-child(2)').classList.add('active');
+    if(id==='info') document.querySelector('.nav div:nth-child(3)').classList.add('active');
+  }
 
-function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  navigator.clipboard.writeText(link);
-  alert("Скопировано!");
-}
+  function tap(){
+    const userRef = db.ref('users/'+userID);
+    userRef.once('value',snap=>{
+      const data = snap.val();
+      if(data.energy<=0){alert("Энергия закончилась"); return;}
+      userRef.update({energy:data.energy-1,balance:parseFloat((data.balance+0.005).toFixed(3))});
+    });
+  }
 
-function showPage(pageId, navId){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(pageId).classList.add('active');
-  document.querySelectorAll('.nav div').forEach(n => n.classList.remove('active'));
-  if(navId) document.getElementById(navId).classList.add('active');
-}
+  function copyRef(){navigator.clipboard.writeText(`https://t.me/DifferentEarningsBot?start=${userID}`);alert("Скопировано!");}
 
-// Задания
-const taskListDiv = document.getElementById("task-list");
-function loadTasks(){
-  const tasksRef = ref(db,'tasks');
-  onValue(tasksRef, snapshot=>{
+  // Tasks
+  const taskListDiv = document.getElementById("task-list");
+  const tasksRef = db.ref('tasks');
+  tasksRef.on('value',snap=>{
     taskListDiv.innerHTML="";
-    snapshot.forEach(child=>{
-      const t = child.val();
+    snap.forEach(child=>{
+      const t=child.val();
       const btn = document.createElement("div");
       btn.className="btn";
       btn.innerText = t.name;
@@ -244,32 +238,30 @@ function loadTasks(){
       taskListDiv.appendChild(btn);
     });
   });
-}
-loadTasks();
 
-let currentTaskID=null;
-function openTask(task,key){
-  currentTaskID = key;
-  const userRef = ref(db,'users/'+userID+'/taskStatus/'+key);
-  get(userRef).then(snapshot=>{
-    if(snapshot.exists() && snapshot.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-    document.getElementById("task-title").innerText = task.name;
-    document.getElementById("task-desc").innerText = task.desc;
-    document.getElementById("task-link-btn").onclick = ()=>window.open(task.link,"_blank");
-    showPage('taskView');
-  });
-}
+  let currentTaskID=null;
+  function openTask(task,key){
+    currentTaskID=key;
+    const userTaskRef = db.ref(`users/${userID}/taskStatus/${key}`);
+    userTaskRef.once('value',snap=>{
+      if(snap.exists() && snap.val()==="on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
+      document.getElementById("task-title").innerText = task.name;
+      document.getElementById("task-desc").innerText = task.desc;
+      document.getElementById("task-link-btn").onclick=()=>window.open(task.link,"_blank");
+      show('taskView');
+    });
+  }
 
-function showReport(){ showPage('report'); }
-function sendReport(){
-  const reportText = document.getElementById("report-text").value;
-  if(!reportText){alert("Введите отчёт"); return;}
-  const updates={};
-  updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
-  updates[`tasks/${currentTaskID}/reports`] = push(ref(db,`tasks/${currentTaskID}/reports`)).key;
-  update(ref(db),updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; showPage('tasks','nav-earn');});
-}
-function backToTasks(){ showPage('tasks','nav-earn'); }
+  function showReport(){show('report');}
+  function sendReport(){
+    const text=document.getElementById("report-text").value;
+    if(!text){alert("Введите отчёт");return;}
+    const updates={};
+    updates[`users/${userID}/taskStatus/${currentTaskID}`]="on_check";
+    updates[`tasks/${currentTaskID}/reports/${Date.now()}`]=text;
+    db.ref().update(updates).then(()=>{alert("Отправлено на проверку"); document.getElementById("report-text").value=""; show('tasks');});
+  }
+  function backToTasks(){show('tasks');}
 </script>
 </body>
 </html>
