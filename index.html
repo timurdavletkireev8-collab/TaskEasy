@@ -2,215 +2,250 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>EASY MONEY</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Money</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyApcL3hN95djDhI-26L623jHHbzREswfQE",
+  authDomain: "cash-1968a.firebaseapp.com",
+  databaseURL: "https://cash-1968a-default-rtdb.firebaseio.com",
+  projectId: "cash-1968a",
+  storageBucket: "cash-1968a.firebasestorage.app",
+  messagingSenderId: "234016139024",
+  appId: "1:234016139024:web:f11daa0328ff06173d2795",
+  measurementId: "G-MFEKWBVN21"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+const userID = tg.initDataUnsafe?.user?.id || Date.now();
+const adminID = 7020322752;
+
+const userRef = ref(db,'users/'+userID);
+const tasksRef = ref(db,'tasks');
+const reportsRef = ref(db,'reports');
+
+// Инициализация пользователя
+get(userRef).then(snapshot=>{
+  if(!snapshot.exists()){
+    set(userRef,{
+      balance:0,
+      energy:1000,
+      referrals:0,
+      completedTasks:0,
+      rejectedTasks:0
+    });
+  }
+});
+
+// Функции
+window.tap = function(){
+  get(userRef).then(snapshot=>{
+    let data = snapshot.val();
+    if(data.energy<=0){alert("Энергия закончилась"); return;}
+    const newEnergy = data.energy-1;
+    const newBalance = +(data.balance+0.005).toFixed(3);
+    update(userRef,{energy:newEnergy,balance:newBalance});
+  });
+}
+
+function updateEnergyUI(energy){ 
+  const percent = (energy/1000)*100; 
+  document.getElementById("energy-bar").style.width = percent+"%";
+  document.getElementById("energy-text").innerText = `Энергия: ${energy}/1000`;
+}
+
+onValue(userRef, snapshot=>{
+  const data = snapshot.val();
+  if(data){
+    updateEnergyUI(data.energy);
+    document.getElementById('balance-text').innerText = data.balance.toFixed(3);
+    document.getElementById('completed-tasks').innerText = data.completedTasks;
+    document.getElementById('rejected-tasks').innerText = data.rejectedTasks;
+  }
+});
+
+// Навигация
+window.showPage = function(id){
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+// Рефералы
+window.showReferral = function(){
+  showPage('referral');
+  const refLink = `https://t.me/DifferentEarningsBot?start=${userID}`;
+  document.getElementById('ref-link').value = refLink;
+}
+
+window.copyReferral = function(){
+  const copyText = document.getElementById('ref-link');
+  copyText.select();
+  copyText.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyText.value);
+  alert('Ссылка скопирована!');
+}
+
+// Задания
+window.showTasks = function(){
+  showPage('tasks');
+  const tasksList = document.getElementById('tasks-list');
+  tasksList.innerHTML='';
+  get(tasksRef).then(snapshot=>{
+    snapshot.forEach(snap=>{
+      const task = snap.val();
+      const key = snap.key;
+      const div = document.createElement('div');
+      div.className='card';
+      div.innerHTML = `<b>${task.name}</b><p>${task.desc}</p><p>Цена: ${task.price}₽</p><button class="btn" onclick="openTask('${key}')">Открыть</button>`;
+      tasksList.appendChild(div);
+    });
+  });
+}
+
+window.openTask = function(key){
+  showPage('task-detail');
+  get(ref(db,'tasks/'+key)).then(snapshot=>{
+    const task = snapshot.val();
+    document.getElementById('task-title').innerText = task.name;
+    document.getElementById('task-desc').innerText = task.desc;
+    document.getElementById('task-price').innerText = task.price+"₽";
+    document.getElementById('task-link').onclick = ()=>window.open(task.link,'_blank');
+    document.getElementById('submit-report').onclick = ()=>submitReport(key);
+  });
+}
+
+window.submitReport = function(taskKey){
+  const report = document.getElementById('report-text').value;
+  if(report==''){alert('Введите отчет'); return;}
+  push(reportsRef,{
+    userID:userID,
+    taskKey:taskKey,
+    report:report,
+    status:'pending'
+  });
+  alert('Задание отправлено на проверку!');
+  showTasks();
+}
+
+</script>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;}
-body{background:url("https://i.postimg.cc/2jx4fT8X/Giga-Chat-40.jpg") center/cover no-repeat;color:white;}
-
-/* TOP */
-.top{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;}
-.title{font-size:60px;font-weight:900;line-height:1.1;} /* намного жирнее */
-.balance{background:rgba(0,0,0,.55);padding:12px 18px;border-radius:16px;border:2px solid rgba(255,255,255,.8);cursor:pointer;}
-
-/* PAGES */
-.page{display:none;padding:24px;height:calc(100% - 180px);overflow-y:auto;}
-.page.active{display:block}
-
-/* CARDS */
-.card{background:rgba(0,0,0,.45);border-radius:22px;padding:24px;margin-bottom:20px;border:2px solid rgba(255,255,255,.8);}
-
-/* BUTTONS */
-.btn{width:100%;padding:18px;margin-top:16px;font-size:18px;border-radius:18px;color:white;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.8);cursor:pointer;font-weight:600;}
-.btn-red{background:rgba(255,0,0,0.3);border:2px solid rgba(255,255,255,.8);}
-
-/* INPUT */
-input, textarea{width:100%;padding:14px;margin-top:12px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.5);color:white;font-size:16px;}
-
-/* NAV */
-.nav{position:fixed;bottom:0;width:100%;height:100px;background:rgba(0,0,0,.6);display:flex;justify-content:space-around;align-items:center;}
-.nav div{font-size:32px;opacity:.5;cursor:pointer;}
-.nav .active{opacity:1;}
-
-/* CLICK IMAGE */
-.click-img{width:180px;height:180px;margin:40px auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,.9);}
+body{margin:0;font-family:'Arial Black',sans-serif;color:white;overflow:hidden;}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px;height:80px;background:url('https://i.postimg.cc/dQ2QDSbQ/Picsart-26-01-03-04-31-27-278.png') center/cover no-repeat;}
+.title{font-size:36px;font-weight:bold;}
+.balance{cursor:pointer;}
+.page{display:none;padding:20px;height:calc(100% - 80px);}
+.page.active{display:block;}
+.btn{padding:14px 22px;border-radius:15px;background:rgba(0,0,0,0.6);border:2px solid white;color:white;font-weight:bold;margin:10px;cursor:pointer;display:inline-block;}
+.btn-red{background:rgba(255,0,0,0.4);}
+.card{background:rgba(0,0,0,0.5);border-radius:20px;padding:20px;margin-bottom:15px;}
+.nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;padding:10px;background:rgba(0,0,0,0.5);}
+.nav button{flex:1;margin:0 5px;}
+.click-img{width:180px;height:180px;display:block;margin:20px auto;border-radius:20px;border:3px solid white;}
+.energy-container{background:rgba(255,255,255,0.2);height:24px;border-radius:12px;position:relative;margin:12px 0;}
+#energy-bar{background:#00ffcc;height:100%;width:100%;border-radius:12px;transition:width .2s;}
+#energy-text{position:absolute;left:50%;top:0;transform:translateX(-50%);color:white;font-weight:bold;}
 </style>
 </head>
 <body>
 
 <div class="top">
   <div class="title">EASY MONEY</div>
-  <div class="balance" onclick="show('withdraw')">Баланс: <span id="balance">0</span>₽</div>
+  <div class="balance" onclick="alert('Вывод средств')">Баланс: <span id="balance-text">0</span>₽</div>
 </div>
 
-<!-- ЗАРАБОТОК -->
+<!-- Заработок -->
 <div id="earn" class="page active">
-  <div class="card">
-    <button class="btn" onclick="show('referral')">Заработок на рефералах</button>
-    <button class="btn" onclick="show('tasks')">Заработок на заданиях</button>
-    <button class="btn" onclick="show('click')">Заработок на кликах</button>
-  </div>
+  <div class="card"><button class="btn" onclick="showReferral()">Заработок на рефералах</button></div>
+  <div class="card"><button class="btn" onclick="showTasks()">Заработок на заданиях</button></div>
+  <div class="card"><button class="btn" onclick="showPage('clicker')">Заработок на кликах</button></div>
 </div>
 
-<!-- РЕФЕРАЛЫ -->
+<!-- Рефералы -->
 <div id="referral" class="page">
   <div class="card">
-    <h3>Приглашайте друзей и зарабатывайте</h3>
-    <p>1 друг = <b>10₽</b> + 200 энергии</p>
-    <p id="ref-link"></p>
-    <button class="btn" onclick="copyRef()">Скопировать ссылку</button>
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
+    <p>Приглашайте друзей и зарабатывайте 10₽ + 200 энергии с каждого!</p>
+    <input id="ref-link" value="" readonly style="width:100%;padding:10px;border-radius:10px;text-align:center;">
+    <button class="btn btn-red" onclick="copyReferral()">Скопировать</button>
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- ЗАДАНИЯ -->
+<!-- Задания -->
 <div id="tasks" class="page">
-  <div class="card">
-    <h3>Задания</h3>
-    <div class="btn" onclick="openTask('Подписка на канал','Подпишитесь на канал и отправьте скриншот','https://t.me/news',20)">Подписка на канал</div>
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
-  </div>
+  <div id="tasks-list"></div>
+  <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
 </div>
 
-<!-- КОНКРЕТНОЕ ЗАДАНИЕ -->
-<div id="taskView" class="page">
+<div id="task-detail" class="page">
   <div class="card">
     <h3 id="task-title"></h3>
     <p id="task-desc"></p>
-    <button class="btn" id="task-link-btn">Перейти по ссылке</button>
-    <button class="btn" onclick="showReport()">Отправить отчёт</button>
-    <button class="btn btn-red" onclick="backToTasks()">Назад</button>
+    <p>Цена: <span id="task-price"></span></p>
+    <button class="btn" id="task-link">Перейти</button>
+    <textarea id="report-text" placeholder="Отправьте отчет" style="width:100%;height:80px;margin-top:10px;"></textarea>
+    <button class="btn btn-red" id="submit-report">Отправить отчет</button>
+    <button class="btn btn-red" onclick="showTasks()">Назад</button>
   </div>
 </div>
 
-<!-- ОТЧЁТ -->
-<div id="report" class="page">
+<!-- Кликер -->
+<div id="clicker" class="page">
   <div class="card">
-    <h3>Отчёт</h3>
-    <textarea id="report-text" placeholder="Вставьте текст или ссылку на скриншот"></textarea>
-    <button class="btn" onclick="sendReport()">Отправить</button>
-    <button class="btn btn-red" onclick="show('taskView')">Назад</button>
+    <div class="energy-container">
+      <div id="energy-bar"></div>
+      <span id="energy-text">Энергия: 1000/1000</span>
+    </div>
+    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
   </div>
 </div>
 
-<!-- КЛИКИ -->
-<div id="click" class="page">
-  <div class="card">
-    <p>Нажимайте на монету 🪙, чтобы зарабатывать!</p>
-    <p>Каждый клик +0.005₽, энергия уменьшается на 1.</p>
-    <p>Всего энергии: <span id="energy">1000</span>/1000. Ежедневно обновляется.</p>
-    <img class="click-img"
-      src="https://i.postimg.cc/tTcf2yZ5/e374be19e2d4ae5844b2b46dd80a094a.jpg"
-      onclick="tap()">
-    <button class="btn btn-red" onclick="show('earn')">Назад</button>
-  </div>
-</div>
-
-<!-- ПРОФИЛЬ -->
+<!-- Профиль -->
 <div id="profile" class="page">
   <div class="card">
-    <h3>Профиль</h3>
-    <p>ID: <span id="user-id">0</span></p>
-    <p>Выполненные задания: <span id="done-tasks">0</span></p>
-    <p>Отклонённые задания: <span id="failed-tasks">0</span></p>
-    <h4>История начислений</h4>
-    <div id="history"></div>
-    <button class="btn btn-red" onclick="show('withdraw')">Вывести</button>
+    <p>ID: <span id="user-id"></span></p>
+    <p>Фото Telegram</p>
+    <p>Выполнено заданий: <span id="completed-tasks">0</span></p>
+    <p>Отклонено заданий: <span id="rejected-tasks">0</span></p>
+    <button class="btn btn-red">Вывести</button>
   </div>
 </div>
 
-<!-- ВЫВОД -->
-<div id="withdraw" class="page">
-  <div class="card">
-    <h3>Вывод средств</h3>
-    <p>Здесь можно вывести баланс.</p>
-    <button class="btn btn-red" onclick="show('profile')">Назад</button>
-  </div>
-</div>
-
-<!-- ИНФОРМАЦИЯ -->
+<!-- Информация -->
 <div id="info" class="page">
   <div class="card">
-    <h3>Информация</h3>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/news')">Новости</button>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/sup')">Поддержка</button>
-    <div id="admin-btn-container"></div>
+    <button class="btn" onclick="window.open('https://t.me/news','_blank')">Новости</button>
+    <button class="btn" onclick="window.open('https://t.me/sup','_blank')">Поддержка</button>
+    <button class="btn" style="display:none;" id="admin-btn" onclick="showPage('admin')">Админка</button>
   </div>
 </div>
 
-<!-- NAV -->
+<!-- Админка -->
+<div id="admin" class="page">
+  <div class="card">
+    <p>Добавление/удаление заданий и проверка отчетов</p>
+    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
+  </div>
+</div>
+
 <div class="nav">
-  <div class="active" onclick="show('earn')">💰</div>
-  <div onclick="show('profile')">👤</div>
-  <div onclick="show('info')">ℹ️</div>
+  <button onclick="showPage('earn')">💰</button>
+  <button onclick="showPage('profile')">👤</button>
+  <button onclick="showPage('info')">ℹ️</button>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-let balance = 0;
-let energy = 1000;
-let userID = tg.initDataUnsafe?.user?.id || 0;
-const adminID = 7020322752;
-let taskStatus = {}; // taskID: "on_check", "done"
-document.getElementById('user-id').innerText = userID;
-
-// Admin button
-if(userID === adminID){
-  const container = document.getElementById('admin-btn-container');
-  const btn = document.createElement('button');
-  btn.className = 'btn';
-  btn.innerText = 'Админка';
-  btn.onclick = ()=>alert('Откроется админка');
-  container.appendChild(btn);
-}
-
-// Pages
-function show(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-// Clicker
-function tap(){
-  if(energy<=0){alert('Энергия закончилась'); return;}
-  energy--; balance +=0.005; balance = +balance.toFixed(3);
-  document.getElementById("energy").innerText = energy;
-  document.getElementById("balance").innerText = balance;
-}
-
-// Referral
-function showReferral(){
-  show('referral');
-}
-function copyRef(){
-  const link = `https://t.me/DifferentEarningsBot?start=${userID}`;
-  document.getElementById('ref-link').innerText = link;
-  navigator.clipboard.writeText(link);
-  alert("Ссылка скопирована!");
-}
-function openRef(){ show('referral'); copyRef(); }
-
-// Tasks
-function openTask(title, desc, link, price){
-  if(taskStatus[title] === "on_check"){alert("Задание на проверке, повторно выполнить нельзя"); return;}
-  document.getElementById("task-title").innerText = title;
-  document.getElementById("task-desc").innerText = desc;
-  document.getElementById("task-link-btn").onclick = ()=>window.open(link,"_blank");
-  show('taskView');
-}
-function showReport(){ show('report'); }
-function sendReport(){
-  const text = document.getElementById("report-text").value;
-  if(!text){alert("Введите отчёт"); return;}
-  alert("Отправлено на проверку");
-  taskStatus[document.getElementById("task-title").innerText] = "on_check";
-  show('tasks');
-}
-function backToTasks(){ show('tasks'); }
+  if(userID == adminID){
+    document.getElementById('admin-btn').style.display='block';
+  }
 </script>
 
 </body>
