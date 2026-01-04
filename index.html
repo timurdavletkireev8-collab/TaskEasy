@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EASY MONEY</title>
+<title>EASY MONEY - OFFICIAL</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="module">
@@ -36,7 +36,7 @@
 
   setTimeout(() => { document.getElementById("loader").style.display = "none"; }, 2500);
 
-  // ИНИЦИАЛИЗАЦИЯ И ЭНЕРГИЯ
+  // ИНИЦИАЛИЗАЦИЯ + ЭНЕРГИЯ 24ч
   get(userRef).then(snap => {
     const now = Date.now();
     const startParam = tg.initDataUnsafe?.start_param;
@@ -67,7 +67,7 @@
     }
   });
 
-  // ИСТОРИЯ И ЗАДАНИЯ
+  // ОТЧЕТЫ И ИСТОРИЯ
   onValue(ref(window.db, "reports"), s => {
     userReports = {};
     const h1 = document.getElementById("hist-money"), h2 = document.getElementById("hist-done"), h3 = document.getElementById("hist-bad");
@@ -83,6 +83,7 @@
     });
   });
 
+  // ЗАДАНИЯ
   onValue(ref(window.db, "tasks"), s => {
     const list = document.getElementById("task-list");
     list.innerHTML = "";
@@ -98,7 +99,7 @@
     });
   });
 
-  // АДМИНКА
+  // АДМИН-ФУНКЦИИ
   if(uid === adminID) {
     document.getElementById("admin-entry").style.display = "block";
     onValue(ref(window.db, "reports"), s => {
@@ -118,12 +119,12 @@
         cont.innerHTML = "";
         let logs = []; s.forEach(c => logs.push(c.val()));
         logs.reverse().slice(0, 50).forEach(l => {
-            cont.innerHTML += `<div style="font-size:11px; border-bottom:1px solid #444;">[${l.time}] ${l.msg}</div>`;
+            cont.innerHTML += `<div style="font-size:11px; border-bottom:1px solid #444; margin-bottom:5px;">[${l.time}] ${l.msg}</div>`;
         });
     });
   }
 
-  // ФУНКЦИИ
+  // ОБЩИЕ ФУНКЦИИ
   window.showPage = id => {
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -170,6 +171,7 @@
             if(bsnap.exists()){
               const bonus = r.price * 0.10;
               update(bossRef, { balance: (bsnap.val().balance || 0) + bonus });
+              push(ref(window.db, "logs"), {uid: 0, msg: `Реф. бонус ${bonus.toFixed(2)}₽ юзеру ${uData.referrer}`, time: new Date().toLocaleTimeString()});
             }
           });
         }
@@ -185,7 +187,7 @@
     const desc = document.getElementById("adminTaskDesc").value;
     const link = document.getElementById("adminTaskLink").value;
     push(ref(window.db,"tasks"), {name, price, desc, link});
-    alert("Добавлено!");
+    alert("Задание добавлено!");
   };
 
 </script>
@@ -208,6 +210,9 @@ body{margin:0;height:100vh;font-family:Arial,sans-serif;color:white;background:u
 .nav img.active{opacity:1;}
 .click-img{width:190px;margin:20px auto;display:block;border-radius:22px;border:2px solid white;}
 input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid white;background:rgba(0,0,0,0.3);color:white;}
+.faq-content {font-size: 14px; line-height: 1.6;}
+.faq-content h3 {border-bottom: 1px solid white; padding-bottom: 5px; margin-top: 20px;}
+.faq-content b {color: #ffcc00;}
 </style>
 </head>
 <body>
@@ -239,16 +244,24 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
 </div>
 
 <div id="faq-page" class="page">
-    <div class="card">
-        <h3>Руководство</h3>
-        <p style="font-size:14px; line-height:1.5;">
-            Добро пожаловать! В нашем приложении вы можете зарабатывать на заданиях, кликах и приглашении друзей.<br><br>
-            Минимальный вывод: 100₽.<br>
-            Реферальные: 10% от дохода друга.<br>
-            Энергия: обновляется раз в 24 часа.
-        </p>
-        <button class="btn" style="background:#0088cc" onclick="window.tg.openLink('https://telegra.ph/RAZDEL-FAQ-OTVETY-NA-GLAVNYE-VOPROSY-12-17')">Полная статья (Telegra.ph)</button>
-        <button class="btn btn-red" onclick="showPage('info')">Назад</button>
+    <div class="card faq-content">
+        <h2 style="text-align:center">Руководство пользователя</h2>
+        
+        <h3>1. Как начать зарабатывать?</h3>
+        <p><b>Задания:</b> Выполняйте простые задачи в разделе «Задания». После выполнения отправьте отчет. После проверки админом деньги будут начислены.</p>
+        <p><b>Кликер:</b> Просто нажимайте на изображение и получайте по 0.005₽ за тап. Энергия (1000 тапов) восстанавливается раз в 24 часа.</p>
+        <p><b>Рефералы:</b> Приглашайте друзей по ссылке. Вы будете получать <b>10%</b> от каждого задания, которое выполнит ваш друг!</p>
+
+        <h3>2. Личный кабинет</h3>
+        <p>В профиле вы найдете свой <b>ID</b>, а также историю всех начислений и статусы ваших отчетов (на проверке, одобрено или отклонено).</p>
+
+        <h3>3. Вывод средств</h3>
+        <p>Минимальная сумма вывода — <b>100₽</b>. Укажите номер карты и сумму, после чего админ обработает заявку в течение суток.</p>
+
+        <h3>4. Правила</h3>
+        <p>Запрещено использование автокликеров и создание фейковых отчетов. За нарушение — блокировка аккаунта без выплаты средств.</p>
+
+        <button class="btn btn-red" onclick="showPage('info')">Закрыть</button>
     </div>
 </div>
 
@@ -267,24 +280,29 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
     <img id="profilePic" style="width:80px; height:80px; border-radius:50%; border:2px solid white; margin-bottom:10px;" src="">
     <p>ID: <span id="uid_display">0</span></p>
     <button class="btn" onclick="showPage('p-money')">История начислений</button>
+    <button class="btn" onclick="showPage('p-done')">Выполненные задания</button>
+    <button class="btn" onclick="showPage('p-bad')">Отклонённые задания</button>
     <button class="btn btn-red" onclick="showPage('withdraw')" style="margin-top:15px;">Вывести</button>
   </div>
 </div>
 
 <div id="tasks" class="page"><h3>Задания</h3><div id="task-list"></div><button class="btn btn-red" onclick="showPage('earn')">Назад</button></div>
-<div id="click" class="page">
-  <div class="card" style="text-align:center">
-    <p>Энергия: <span id="energy">1000</span>/1000</p>
-    <img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()">
-    <button class="btn btn-red" onclick="showPage('earn')">Назад</button>
-  </div>
-</div>
-<div id="withdraw" class="page"><div class="card"><h3>Вывод</h3><input id="card" placeholder="Карта"><input id="sumWithdraw" type="number" placeholder="Сумма"><button class="btn">Вывести</button><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div></div>
+<div id="task-details" class="page"><div class="card"><h3 id="det-title"></h3><p id="det-desc"></p><p>Награда: <span id="det-price"></span>₽</p><button class="btn" id="det-link-btn">Перейти</button><textarea id="det-input" placeholder="Отчет"></textarea><button class="btn" onclick="sendTaskReport()">Отправить</button><button class="btn btn-red" onclick="showPage('tasks')">Назад</button></div></div>
+<div id="click" class="page"><div class="card" style="text-align:center"><p>Энергия: <span id="energy">1000</span>/1000</p><img class="click-img" src="https://i.postimg.cc/cCspvTn2/Picsart-26-01-03-04-33-45-909.png" onclick="tap()"><button class="btn btn-red" onclick="showPage('earn')">Назад</button></div></div>
+<div id="withdraw" class="page"><div class="card"><h3>Вывод</h3><input id="card" placeholder="Карта"><input id="sumWithdraw" type="number" placeholder="Сумма"><button class="btn">Заявка</button><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div></div>
 <div id="p-money" class="page"><h3>Начисления</h3><div id="hist-money"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
+<div id="p-done" class="page"><h3>Одобрено</h3><div id="hist-done"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
+<div id="p-bad" class="page"><h3>Отказы</h3><div id="hist-bad"></div><button class="btn btn-red" onclick="showPage('profile')">Назад</button></div>
 
-<div id="admin-main" class="page"><button class="btn" onclick="showPage('admin-tasks')">➕ Задание</button><button class="btn" onclick="showPage('admin-reports')">🔎 Отчеты</button><button class="btn btn-red" onclick="showPage('info')">Назад</button></div>
-<div id="admin-tasks" class="page"><input id="adminTaskName" placeholder="Имя"><input id="adminTaskPrice" type="number" placeholder="Цена"><textarea id="adminTaskDesc" placeholder="Опись"></textarea><input id="adminTaskLink" placeholder="Линк"><button class="btn" onclick="addTask()">Создать</button><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
+<div id="admin-main" class="page">
+    <button class="btn" onclick="showPage('admin-tasks')">Создать задание</button>
+    <button class="btn" onclick="showPage('admin-reports')">Проверка отчетов</button>
+    <button class="btn" onclick="showPage('admin-logs')">Логи системы</button>
+    <button class="btn btn-red" onclick="showPage('info')">Назад</button>
+</div>
+<div id="admin-tasks" class="page"><input id="adminTaskName" placeholder="Имя"><input id="adminTaskPrice" type="number" placeholder="Цена"><textarea id="adminTaskDesc" placeholder="Опись"></textarea><input id="adminTaskLink" placeholder="Линк"><button class="btn" onclick="addTask()">Добавить</button><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
 <div id="admin-reports" class="page"><div id="admin-reports-list"></div><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
+<div id="admin-logs" class="page"><div id="admin-logs-list" class="card"></div><button class="btn btn-red" onclick="showPage('admin-main')">Назад</button></div>
 
 <div class="nav">
   <img src="https://i.postimg.cc/9MfvXtnQ/Picsart-26-01-03-07-41-15-897.png" onclick="nav('earn', event)" class="active">
@@ -303,5 +321,4 @@ input, textarea{width:100%;padding:12px;margin-top:10px;border-radius:10px;borde
 </script>
 
 </body>
-</html>
-
+                                 </html>
