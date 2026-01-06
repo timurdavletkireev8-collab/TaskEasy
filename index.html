@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Dog Money 🐶</title>
-
 <style>
 :root { --gold: linear-gradient(135deg,#ffcc00,#ff9f00);}
 *{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
@@ -26,9 +25,14 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
 .bone{position:fixed;font-size:28px;pointer-events:none;animation:boneFly 0.8s ease forwards;z-index:1000;}
 @keyframes boneFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
 .profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
+/* Fullscreen overlay */
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;z-index:10000;color:#fff;overflow:auto;padding:20px;}
+#overlay h2{margin-top:0;}
+#overlay .closeBtn{position:absolute;top:12px;right:12px;background:#ff9f00;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:600;cursor:pointer;}
+#overlay input{width:80px;margin-right:8px;}
+#adminTable input{width:60px;}
 </style>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -48,18 +52,18 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
   <div class="card">
     <h2>🐾 Клики</h2>
     <p>Жми и получай монеты</p>
-    <button class="btn" id="clickBtn">Кликнуть 🐕</button>
+    <button class="btn actionBtn" data-type="click">Кликнуть 🐕</button>
     <p id="clicks">Кликов: 0</p>
   </div>
   <div class="card">
     <h2>📋 Задания</h2>
     <p>Выполняй задания и зарабатывай</p>
-    <button class="btn">Перейти к заданиям</button>
+    <button class="btn actionBtn" data-type="tasks">Перейти к заданиям</button>
   </div>
   <div class="card">
     <h2>🤝 Рефералы</h2>
     <p>Приглашай друзей и получай бонус</p>
-    <button class="btn" id="personalLinkBtn">Моя ссылка</button>
+    <button class="btn actionBtn" data-type="referrals">Перейти</button>
   </div>
 </div>
 
@@ -110,6 +114,12 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
   <button id="btn-info" onclick="openSection('info')">ℹ️ Инфо</button>
 </nav>
 
+<!-- Fullscreen Overlay -->
+<div id="overlay">
+  <button class="closeBtn">Закрыть</button>
+  <div id="overlayContent"></div>
+</div>
+
 <script>
 const tg = window.Telegram.WebApp;
 tg.ready();
@@ -153,12 +163,36 @@ userRef.get().then(docSnap => {
 });
 
 // Клики
-document.getElementById("clickBtn").addEventListener("click", () => {
-    clicks++;
-    document.getElementById("clicks").innerText = "Кликов: " + clicks;
-    document.getElementById("profileClicks").innerText = clicks;
-    userRef.update({ clicks });
-    tg.HapticFeedback.impactOccurred("medium");
+document.querySelectorAll(".actionBtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>openOverlay(btn.dataset.type));
+});
+
+function openOverlay(type){
+    const overlay = document.getElementById("overlay");
+    const content = document.getElementById("overlayContent");
+    overlay.style.display = "block";
+
+    if(type==="click"){
+        content.innerHTML = `<h2>🐾 Клики</h2><p>Жми и получай монеты!</p>
+        <button class="btn" id="clickOverlayBtn">Кликнуть 🐕</button>
+        <p id="clickOverlayCount">Кликов: ${clicks}</p>`;
+        document.getElementById("clickOverlayBtn").addEventListener("click", ()=>{
+            clicks++;
+            document.getElementById("clickOverlayCount").innerText = "Кликов: " + clicks;
+            document.getElementById("clicks").innerText = "Кликов: " + clicks;
+            document.getElementById("profileClicks").innerText = clicks;
+            userRef.update({ clicks });
+            tg.HapticFeedback.impactOccurred("medium");
+        });
+    } else if(type==="tasks"){
+        content.innerHTML = `<h2>📋 Задания</h2><p>Здесь будут задания для заработка.</p>`;
+    } else if(type==="referrals"){
+        content.innerHTML = `<h2>🤝 Рефералы</h2><p>Приглашай друзей и получай бонус!</p>`;
+    }
+}
+
+document.querySelector("#overlay .closeBtn").addEventListener("click", ()=>{
+    document.getElementById("overlay").style.display="none";
 });
 
 // Навигация
@@ -173,11 +207,6 @@ function openSection(id) {
     }
 }
 
-// Админка
-document.getElementById("openAdmin").addEventListener("click", () => {
-    alert("Админка открыта! Тут можно реализовать редактирование баланса и кликов.");
-});
-
 // Косточка
 function spawnBone(x, y){
     const bone=document.createElement("div");
@@ -190,6 +219,43 @@ function spawnBone(x, y){
 }
 document.addEventListener("click", e=>spawnBone(e.clientX,e.clientY));
 document.addEventListener("touchstart", e=>spawnBone(e.touches[0].clientX,e.touches[0].clientY));
+
+// --- Реальная админка ---
+document.getElementById("openAdmin").addEventListener("click", async ()=>{
+    const overlay = document.getElementById("overlay");
+    overlay.style.display="block";
+    const content = document.getElementById("overlayContent");
+    content.innerHTML = `<h2>🛡 Админка</h2><table border="1" id="adminTable"><tr><th>ID</th><th>Username</th><th>Баланс</th><th>Клики</th><th>Сохранить</th></tr></table>`;
+
+    const usersSnap = await db.collection("users").get();
+    const table = document.getElementById("adminTable");
+    usersSnap.forEach(doc=>{
+        const data = doc.data();
+        const row = table.insertRow();
+        row.insertCell(0).innerText = doc.id;
+        row.insertCell(1).innerText = data.username;
+        const balCell = row.insertCell(2);
+        const balInput = document.createElement("input");
+        balInput.type="number"; balInput.value=data.balance||0;
+        balCell.appendChild(balInput);
+        const clicksCell = row.insertCell(3);
+        const clicksInput = document.createElement("input");
+        clicksInput.type="number"; clicksInput.value=data.clicks||0;
+        clicksCell.appendChild(clicksInput);
+        const saveCell = row.insertCell(4);
+        const saveBtn = document.createElement("button");
+        saveBtn.innerText="Сохранить";
+        saveBtn.className="btn";
+        saveBtn.addEventListener("click", ()=>{
+            db.collection("users").doc(doc.id).update({
+                balance: parseInt(balInput.value),
+                clicks: parseInt(clicksInput.value)
+            });
+            alert(`Сохранено для ${data.username}`);
+        });
+        saveCell.appendChild(saveBtn);
+    });
+});
 </script>
 
 </body>
