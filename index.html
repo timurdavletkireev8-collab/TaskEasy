@@ -7,11 +7,9 @@
 
 <!-- Firebase -->
 <script type="module">
-  // Import Firebase SDK
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
 
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
     authDomain: "dogsmoney.firebaseapp.com",
@@ -21,11 +19,10 @@
     appId: "1:339745413806:web:08f8fdd856ee92a3002b3f"
   };
 
-  // Init Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Экспортим db для других скриптов
+  // Экспорт для использования в основном коде
   window.firebaseDb = db;
   window.firebaseFuncs = { doc, getDoc, setDoc, updateDoc, collection, getDocs };
 </script>
@@ -81,7 +78,7 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
   <div class="card">
     <h2>🤝 Рефералы</h2>
     <p>Приглашай друзей и получай бонус</p>
-    <button class="btn" id="refLink">Моя ссылка</button>
+    <button class="btn" id="personalLinkBtn">Моя ссылка</button>
   </div>
 </div>
 
@@ -93,7 +90,6 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
     <p>ID: <span id="profileId">—</span></p>
     <p>Баланс: <b id="profileBalance">0 🪙</b></p>
     <p>Клики: <span id="profileClicks">0</span></p>
-    <button class="btn" id="personalLinkBtn">Персональная ссылка</button>
   </div>
 </div>
 
@@ -134,22 +130,23 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
 </nav>
 
 <script type="module">
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
 
-const tg = window.Telegram.WebApp;
-tg.ready();
+document.addEventListener("DOMContentLoaded", async () => {
+  const tg = window.Telegram.WebApp;
+  tg.ready();
 
-const db = window.firebaseDb;
-const { doc: Doc, getDoc: GetDoc, setDoc: SetDoc, updateDoc: UpdateDoc, collection: Collection, getDocs: GetDocs } = window.firebaseFuncs;
+  const db = window.firebaseDb;
+  const { doc: Doc, getDoc: GetDoc, setDoc: SetDoc, updateDoc: UpdateDoc } = window.firebaseFuncs;
 
-let clicks = 0;
-let userId = tg.initDataUnsafe?.user?.id || 0;
-let username = tg.initDataUnsafe?.user?.username || "без username";
-let photo_url = tg.initDataUnsafe?.user?.photo_url || "";
+  let clicks = 0;
+  let userId = tg.initDataUnsafe?.user?.id || 0;
+  let username = tg.initDataUnsafe?.user?.username || "без username";
+  let photo_url = tg.initDataUnsafe?.user?.photo_url || "";
 
-const userDocRef = Doc(db, "users", String(userId));
+  const userDocRef = Doc(db, "users", String(userId));
 
-async function initUser() {
+  // Инициализация пользователя
   const docSnap = await GetDoc(userDocRef);
   if(!docSnap.exists()){
     await SetDoc(userDocRef,{
@@ -165,55 +162,51 @@ async function initUser() {
     document.getElementById("profileBalance").innerText = data.balance + " 🪙";
     document.getElementById("profileClicks").innerText = data.clicks;
   }
+
   document.getElementById("profileUsername").innerText = "@" + username;
   document.getElementById("profileId").innerText = userId;
   document.getElementById("profilePhoto").src = photo_url;
   document.getElementById("personalLinkBtn").innerText = "Персональная ссылка: @dogeasymoneybot?start=" + userId;
-}
 
-initUser();
+  // Клик
+  document.getElementById("clickBtn").addEventListener("click", async ()=>{
+    clicks++;
+    document.getElementById("clicks").innerText = "Кликов: " + clicks;
+    document.getElementById("profileClicks").innerText = clicks;
+    await UpdateDoc(userDocRef,{ clicks });
+    tg.HapticFeedback.impactOccurred("medium");
+  });
 
-document.getElementById("clickBtn").addEventListener("click", async ()=>{
-  clicks++;
-  document.getElementById("clicks").innerText = "Кликов: " + clicks;
-  document.getElementById("profileClicks").innerText = clicks;
-  await UpdateDoc(userDocRef,{ clicks });
-  tg.HapticFeedback.impactOccurred("medium");
-});
-
-// Навигация
-function openSection(id){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('btn-'+id).classList.add('active');
-  tg.HapticFeedback.impactOccurred("light");
-
-  // Проверка на админа
-  if(id==="info"){
-    if(userId===7020322752){
+  // Навигация и админка
+  window.openSection = function(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('btn-'+id).classList.add('active');
+    tg.HapticFeedback.impactOccurred("light");
+    if(id==="info" && userId===7020322752){
       document.getElementById("adminCard").style.display="block";
     }
+  };
+
+  // Админка
+  document.getElementById("openAdmin").addEventListener("click", async ()=>{
+    alert("Админка открыта (тут можно реализовать функции просмотра пользователей и редактирования баланса)");
+  });
+
+  // Косточка при тапе
+  document.addEventListener("touchstart", e=>spawnBone(e.touches[0].clientX,e.touches[0].clientY));
+  document.addEventListener("click", e=>spawnBone(e.clientX,e.clientY));
+  function spawnBone(x,y){
+    const bone=document.createElement("div");
+    bone.className="bone";
+    bone.innerText="🦴";
+    bone.style.left=(x-12)+"px";
+    bone.style.top=(y-20)+"px";
+    document.body.appendChild(bone);
+    setTimeout(()=>bone.remove(),800);
   }
-}
-
-// Админка
-document.getElementById("openAdmin").addEventListener("click", async ()=>{
-  alert("Админка открыта (тут можно реализовать функции просмотра пользователей и редактирования баланса)");
 });
-
-// BONE ON TAP
-document.addEventListener("touchstart", e=>spawnBone(e.touches[0].clientX,e.touches[0].clientY));
-document.addEventListener("click", e=>spawnBone(e.clientX,e.clientY));
-function spawnBone(x,y){
-  const bone=document.createElement("div");
-  bone.className="bone";
-  bone.innerText="🦴";
-  bone.style.left=(x-12)+"px";
-  bone.style.top=(y-20)+"px";
-  document.body.appendChild(bone);
-  setTimeout(()=>bone.remove(),800);
-}
 </script>
 
 </body>
