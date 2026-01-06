@@ -85,11 +85,14 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
       <h2>🛠 Поддержка</h2>
       <p><b>@support_dogmoney</b></p>
     </div>
+
+    <!-- Админка -->
     <div class="card" id="adminCard" style="display:none;">
       <h2>🛡 Админка</h2>
       <p>Только для админа</p>
       <button class="btn" id="openAdmin">Перейти</button>
     </div>
+
     <div class="card">
       <h2>📘 Руководство</h2>
       <p><b>1.</b> Перейди в «Заработать»</p>
@@ -154,6 +157,11 @@ userRef.get().then(docSnap=>{
     document.getElementById("profilePhoto").src = photo_url;
 });
 
+// Показ админки только для 7020322752
+if(userId === 7020322752){
+    document.getElementById("adminCard").style.display = "block";
+}
+
 // Клики + overlay
 document.querySelectorAll(".actionBtn").forEach(btn=>{
     btn.addEventListener("click", ()=>openOverlay(btn.dataset.type));
@@ -194,9 +202,6 @@ function openSection(id){
     document.getElementById(id).classList.add("active");
     document.getElementById("btn-"+id).classList.add("active");
     tg.HapticFeedback.impactOccurred("light");
-    if(id==="info" && userId===7020322752){
-        document.getElementById("adminCard").style.display="block";
-    }
 }
 
 // Косточки
