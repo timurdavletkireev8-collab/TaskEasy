@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Dogs Money 🐶</title>
+<title>Dog Money 🐶</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -22,8 +22,8 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow-x: hidden;
   background: radial-gradient(circle at top, #fff2d6, #ffd28a);
+  overflow-x: hidden;
 }
 
 /* HEADER */
@@ -44,7 +44,7 @@ header {
 /* CONTENT */
 .container {
   padding: 15px;
-  padding-bottom: 120px; /* запас под навбар */
+  padding-bottom: 120px;
 }
 
 /* CARD */
@@ -54,6 +54,12 @@ header {
   padding: 18px;
   margin-bottom: 16px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+  animation: fadeUp 0.25s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* BUTTON */
@@ -77,14 +83,14 @@ header {
 /* SECTIONS */
 .section {
   display: none;
-  animation: fadeSlide 0.25s ease;
+  animation: slide 0.25s ease;
 }
 
 .section.active {
   display: block;
 }
 
-@keyframes fadeSlide {
+@keyframes slide {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
 }
@@ -120,16 +126,16 @@ nav button.active {
   box-shadow: 0 6px 18px rgba(255,170,0,0.7);
 }
 
-/* CAT EMOJI */
-.cat {
+/* BONE */
+.bone {
   position: fixed;
   font-size: 28px;
   pointer-events: none;
-  animation: catFly 0.8s ease forwards;
+  animation: boneFly 0.8s ease forwards;
   z-index: 1000;
 }
 
-@keyframes catFly {
+@keyframes boneFly {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-60px) scale(1.6); }
 }
@@ -141,30 +147,50 @@ nav button.active {
 <header>
   <div class="dog">🐶💎</div>
   <h1>Dog Money</h1>
-  <div class="small">Премиальный заработок</div>
+  <div class="small">Зарабатывай с собачками</div>
 </header>
 
 <div class="container">
 
+<!-- ЗАРАБОТОК -->
 <div id="earn" class="section active">
+
   <div class="card">
     <h2>🐾 Клики</h2>
+    <p>Жми и получай монеты</p>
     <button class="btn" onclick="clickEarn()">Кликнуть 🐕</button>
     <p id="clicks">Кликов: 0</p>
   </div>
+
+  <div class="card">
+    <h2>📋 Задания</h2>
+    <p>Выполняй задания и зарабатывай</p>
+    <button class="btn">Перейти к заданиям</button>
+  </div>
+
+  <div class="card">
+    <h2>🤝 Рефералы</h2>
+    <p>Приглашай друзей и получай бонус</p>
+    <button class="btn">Моя ссылка</button>
+  </div>
+
 </div>
 
+<!-- ПРОФИЛЬ -->
 <div id="profile" class="section">
   <div class="card">
     <h2>👤 Профиль</h2>
     <p id="username">Пользователь: —</p>
+    <p>Баланс: <b>0 🪙</b></p>
   </div>
 </div>
 
+<!-- ИНФО -->
 <div id="info" class="section">
   <div class="card">
     <h2>ℹ️ Информация</h2>
-    <p>Заработок в Telegram с собачками 🐶</p>
+    <p>Dog Money — Telegram mini-app для заработка.</p>
+    <p>Клики • Задания • Рефералы 🐶</p>
   </div>
 </div>
 
@@ -203,25 +229,24 @@ function clickEarn() {
   tg.HapticFeedback.impactOccurred("medium");
 }
 
-/* CAT EMOJI ON TOUCH */
+/* BONE ON TAP */
 document.addEventListener("touchstart", e => {
-  const touch = e.touches[0];
-  spawnCat(touch.clientX, touch.clientY);
+  const t = e.touches[0];
+  spawnBone(t.clientX, t.clientY);
 });
 
 document.addEventListener("click", e => {
-  spawnCat(e.clientX, e.clientY);
+  spawnBone(e.clientX, e.clientY);
 });
 
-function spawnCat(x, y) {
-  const cat = document.createElement("div");
-  cat.className = "cat";
-  cat.innerText = "🐱";
-  cat.style.left = x - 10 + "px";
-  cat.style.top = y - 20 + "px";
-  document.body.appendChild(cat);
-
-  setTimeout(() => cat.remove(), 800);
+function spawnBone(x, y) {
+  const bone = document.createElement("div");
+  bone.className = "bone";
+  bone.innerText = "🦴";
+  bone.style.left = (x - 12) + "px";
+  bone.style.top = (y - 20) + "px";
+  document.body.appendChild(bone);
+  setTimeout(() => bone.remove(), 800);
 }
 </script>
 
