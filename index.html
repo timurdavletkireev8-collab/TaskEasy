@@ -130,18 +130,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Переменные для пользователя
+// Переменные
 let clicks = 0;
 let balance = 0;
 let userRef;
 let userId = 0;
 
-// Функция инициализации пользователя и админки
-function initUser(){
-    const user = tg.initDataUnsafe?.user;
-    userId = user?.id || 0;
-    const username = user?.username || "без username";
-    const photo_url = user?.photo_url || "";
+// Ждём, пока Telegram отдаст данные пользователя
+function waitForUserData(callback){
+    let tries = 0;
+    const interval = setInterval(()=>{
+        if(tg.initDataUnsafe?.user){
+            clearInterval(interval);
+            callback(tg.initDataUnsafe.user);
+        } else if(tries>20){
+            clearInterval(interval);
+            alert("Не удалось получить данные пользователя Telegram");
+        }
+        tries++;
+    },100);
+}
+
+waitForUserData(user=>{
+    userId = user.id;
+    const username = user.username || "без username";
+    const photo_url = user.photo_url || "";
 
     document.getElementById("profileUsername").innerText = "@"+username;
     document.getElementById("profileId").innerText = userId;
@@ -162,14 +175,11 @@ function initUser(){
         }
     });
 
-    // Показ админки только для 7020322752
+    // Показываем админку только для админа
     if(userId === 7020322752){
         document.getElementById("adminCard").style.display = "block";
     }
-}
-
-// Ждём 300мс, чтобы Telegram точно отдал данные
-setTimeout(initUser, 300);
+});
 
 // Клики + overlay
 document.querySelectorAll(".actionBtn").forEach(btn=>{
