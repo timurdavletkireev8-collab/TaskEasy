@@ -2,240 +2,205 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Dogs Money</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
-  authDomain: "dogsmoney.firebaseapp.com",
-  databaseURL: "https://dogsmoney-default-rtdb.firebaseio.com",
-  projectId: "dogsmoney",
-  storageBucket: "dogsmoney.firebasestorage.app",
-  messagingSenderId: "339745413806",
-  appId: "1:339745413806:web:08f8fdd856ee92a3002b3f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-window.db = db;
-window.ref = ref;
-window.get = get;
-window.set = set;
-window.update = update;
-</script>
+<title>Dog Money 🐶</title>
 
 <style>
-*{box-sizing:border-box;font-family:Arial}
-body{
-margin:0;
-background:radial-gradient(circle at top,#fff2d6,#ffd28a);
-overflow:hidden;
-}
-
-header img{
-width:100%;
-border-radius:0 0 22px 22px;
-}
-
-.page{
-position:absolute;
-top:0;left:0;
-width:100%;height:100%;
-padding:16px;
-background:transparent;
-display:none;
-overflow-y:auto;
-animation:fade .25s;
-}
-.page.active{display:block;}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(10px)}
-to{opacity:1;transform:translateY(0)}
-}
-
-.card{
-background:#fff;
-border-radius:18px;
-padding:16px;
-margin-bottom:14px;
-box-shadow:0 8px 18px rgba(0,0,0,.18);
-}
-
-.btn{
-width:100%;
-padding:15px;
-border:none;
-border-radius:16px;
-font-size:16px;
-font-weight:bold;
-color:#fff;
-background:linear-gradient(135deg,#ff9800,#ff5722);
-box-shadow:0 6px 14px rgba(0,0,0,.25);
-}
-
-.center{text-align:center}
-
-.nav{
-position:fixed;
-bottom:0;left:0;
-width:100%;
-display:flex;
-background:#fff;
-border-top:2px solid #f3b85c;
-z-index:10;
-}
-.nav button{
-flex:1;
-padding:14px;
-border:none;
-font-size:20px;
-background:#ffa726;
-color:#fff;
-}
-
-.bone{
-position:fixed;
-font-size:24px;
-pointer-events:none;
-animation:bone 1s forwards;
-}
-@keyframes bone{
-from{opacity:1;transform:translateY(0)}
-to{opacity:0;transform:translateY(-60px)}
-}
+:root { --gold: linear-gradient(135deg,#ffcc00,#ff9f00); }
+*{box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);overflow-x:hidden;}
+header{text-align:center;padding:20px 15px;}
+.header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,0.3);}
+.small{font-size:14px;opacity:.7;margin-top:8px;}
+.container{padding:15px;padding-bottom:120px;}
+.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,.12);}
+.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;cursor:pointer;background:var(--gold);box-shadow:0 8px 20px rgba(255,170,0,.6);}
+.btn:active{transform:scale(.95);}
+.section{display:none;}
+.section.active{display:block;}
+nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-radius:22px;display:flex;padding:6px;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;}
+nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,.7);}
+.bone{position:fixed;font-size:28px;pointer-events:none;animation:boneFly .8s ease forwards;z-index:1000;}
+@keyframes boneFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
+.profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);display:none;z-index:10000;color:#fff;overflow:auto;padding:20px;}
+#overlay .closeBtn{position:absolute;top:12px;right:12px;background:#ff9f00;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:600;}
+input{padding:6px;border-radius:8px;border:none;}
 </style>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js"></script>
 </head>
 
 <body>
 
 <header>
-<img src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg">
+  <img class="header-img" src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg">
+  <div class="small">Зарабатывай с собачками 🐶</div>
 </header>
 
-<!-- 💰 ЗАРАБОТОК -->
-<div class="page active" id="earn">
-<div class="card">
-<h3>🦴 Клики</h3>
-<button class="btn" onclick="openPage('click')">Зарабатывать</button>
-</div>
-<div class="card">
-<h3>👥 Рефералы</h3>
-<button class="btn" onclick="openPage('refs')">Зарабатывать</button>
-</div>
-<div class="card">
-<h3>📋 Задания</h3>
-<button class="btn" onclick="openPage('tasks')">Зарабатывать</button>
-</div>
+<div class="container">
+
+<!-- ЗАРАБОТОК -->
+<div id="earn" class="section active">
+  <div class="card">
+    <h2>🐾 Клики</h2>
+    <button class="btn" onclick="openOverlay('click')">Кликать</button>
+    <p id="clicks">Кликов: 0</p>
+  </div>
+
+  <div class="card">
+    <h2>📋 Задания</h2>
+    <button class="btn" onclick="openOverlay('tasks')">Открыть</button>
+  </div>
+
+  <div class="card">
+    <h2>🤝 Рефералы</h2>
+    <button class="btn" onclick="openOverlay('refs')">Открыть</button>
+  </div>
 </div>
 
-<!-- 🦴 КЛИКЕР -->
-<div class="page" id="click">
-<div class="card center">
-<h2>Тапай 🦴</h2>
-<button class="btn" onclick="tap()">ТАП</button>
-<p id="clicks">0</p>
-</div>
-</div>
-
-<!-- 👤 ПРОФИЛЬ -->
-<div class="page" id="profile">
-<div class="card center">
-<img id="photo" width="90" style="border-radius:50%;margin-bottom:8px">
-<p id="username"></p>
-<p>ID: <span id="uid"></span></p>
-<p>Баланс: <span id="balance">0</span> 🪙</p>
-</div>
+<!-- ПРОФИЛЬ -->
+<div id="profile" class="section">
+  <div class="card">
+    <img id="photo" class="profile-photo">
+    <h2 id="username">—</h2>
+    <p>ID: <span id="uid">—</span></p>
+    <p>Баланс: <b id="balance">0</b> 🪙</p>
+    <button class="btn" onclick="openOverlay('withdraw')">Вывести</button>
+  </div>
 </div>
 
-<!-- ℹ️ ИНФО -->
-<div class="page" id="info">
-<div class="card">
-<h3>📢 Новостной канал</h3>
-<p>@dogeasymoneybot</p>
-</div>
-<div class="card">
-<h3>🆘 Поддержка</h3>
-<p>Через бота</p>
-</div>
-<div class="card">
-<h3>📘 Руководство</h3>
-<p>Тапай — зови друзей — зарабатывай</p>
+<!-- ИНФО -->
+<div id="info" class="section">
+  <div class="card">
+    <h2>📰 Новости</h2>
+    <p>@dogeasymoneybot</p>
+  </div>
+
+  <div class="card">
+    <h2>🛠 Поддержка</h2>
+    <p>@support_dogmoney</p>
+  </div>
+
+  <div class="card" id="adminCard" style="display:none">
+    <h2>🛡 Админка</h2>
+    <button class="btn" onclick="openOverlay('admin')">Войти</button>
+  </div>
 </div>
 
-<!-- 🛠 АДМИНКА -->
-<div class="card" id="admin" style="display:none">
-<h3>🛠 Админка</h3>
-<button class="btn" onclick="alert('Админ доступ OK')">Войти</button>
-</div>
 </div>
 
-<!-- 🔻 НАВИГАЦИЯ -->
-<div class="nav">
-<button onclick="openPage('earn')">💰</button>
-<button onclick="openPage('profile')">👤</button>
-<button onclick="openPage('info')">ℹ️</button>
+<nav>
+  <button id="btn-earn" class="active" onclick="openSection('earn')">💰</button>
+  <button id="btn-profile" onclick="openSection('profile')">👤</button>
+  <button id="btn-info" onclick="openSection('info')">ℹ️</button>
+</nav>
+
+<div id="overlay">
+  <button class="closeBtn" onclick="closeOverlay()">Закрыть</button>
+  <div id="overlayContent"></div>
 </div>
 
-<script type="module">
+<script>
+/* ---------- TELEGRAM ---------- */
 const tg = window.Telegram.WebApp;
 tg.ready(); tg.expand();
 
-let userId=0, clicks=0;
-
-window.openPage=id=>{
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
-
-window.tap=()=>{
-clicks++;
-document.getElementById("clicks").innerText=clicks;
-update(ref(db,'users/'+userId),{clicks});
-}
-
-document.body.addEventListener('click',e=>{
-const b=document.createElement('div');
-b.className='bone';
-b.innerText='🦴';
-b.style.left=e.clientX+'px';
-b.style.top=e.clientY+'px';
-document.body.appendChild(b);
-setTimeout(()=>b.remove(),1000);
+/* ---------- FIREBASE ---------- */
+firebase.initializeApp({
+  apiKey:"AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
+  authDomain:"dogsmoney.firebaseapp.com",
+  projectId:"dogsmoney"
 });
+const db = firebase.firestore();
 
+/* ---------- STATE ---------- */
+let userId=0, userRef;
+let clicks=0, balance=0;
+
+/* ---------- INIT ---------- */
 (function waitUser(){
-if(tg.initDataUnsafe?.user){
-const u=tg.initDataUnsafe.user;
-userId=u.id;
+  if(tg.initDataUnsafe?.user){
+    const u=tg.initDataUnsafe.user;
+    userId=u.id;
+    document.getElementById("username").innerText='@'+(u.username||'no');
+    document.getElementById("uid").innerText=userId;
+    document.getElementById("photo").src=u.photo_url||'';
 
-document.getElementById("username").innerText='@'+(u.username||'no');
-document.getElementById("uid").innerText=userId;
-document.getElementById("photo").src=u.photo_url||'';
+    if(userId===7020322752) document.getElementById("adminCard").style.display="block";
 
-if(userId===7020322752){
-document.getElementById("admin").style.display='block';
-}
-
-get(ref(db,'users/'+userId)).then(s=>{
-if(!s.exists()){
-set(ref(db,'users/'+userId),{clicks:0,balance:0});
-}else{
-clicks=s.val().clicks||0;
-document.getElementById("clicks").innerText=clicks;
-document.getElementById("balance").innerText=s.val().balance||0;
-}
-});
-}else setTimeout(waitUser,100);
+    userRef=db.collection("users").doc(String(userId));
+    userRef.get().then(d=>{
+      if(!d.exists){
+        userRef.set({clicks:0,balance:0});
+      }else{
+        clicks=d.data().clicks||0;
+        balance=d.data().balance||0;
+        updateUI();
+      }
+    });
+  }else setTimeout(waitUser,100);
 })();
+
+/* ---------- UI ---------- */
+function updateUI(){
+  document.getElementById("clicks").innerText="Кликов: "+clicks;
+  document.getElementById("balance").innerText=balance.toFixed(2);
+}
+
+/* ---------- NAV ---------- */
+function openSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('btn-'+id).classList.add('active');
+}
+
+/* ---------- OVERLAY ---------- */
+function openOverlay(type){
+  overlay.style.display="block";
+  if(type==="click"){
+    overlayContent.innerHTML=`<h2>🐾 Клики</h2>
+    <button class="btn" onclick="doClick()">КЛИК</button>`;
+  }
+  if(type==="refs"){
+    overlayContent.innerHTML=`<h2>🤝 Рефералы</h2>
+    <p>Твоя ссылка:</p>
+    <input value="https://t.me/dogeasymoneybot?start=${userId}" readonly style="width:100%">`;
+  }
+  if(type==="withdraw"){
+    overlayContent.innerHTML=`<h2>💸 Вывод</h2>
+    <button class="btn" onclick="sendWithdraw()">Отправить заявку</button>`;
+  }
+  if(type==="tasks"){
+    overlayContent.innerHTML=`<h2>📋 Задания</h2><p>Скоро будут</p>`;
+  }
+  if(type==="admin"){
+    overlayContent.innerHTML=`<h2>🛡 Админка</h2><p>Управление через Firebase</p>`;
+  }
+}
+function closeOverlay(){overlay.style.display="none";}
+
+/* ---------- LOGIC ---------- */
+function doClick(){
+  clicks++;
+  balance+=0.01;
+  userRef.update({clicks,balance});
+  updateUI();
+}
+
+/* ---------- BONES ---------- */
+document.addEventListener("click",e=>{
+  const b=document.createElement("div");
+  b.className="bone"; b.innerText="🦴";
+  b.style.left=e.clientX+"px";
+  b.style.top=e.clientY+"px";
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),800);
+});
 </script>
 
 </body>
