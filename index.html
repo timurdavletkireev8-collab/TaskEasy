@@ -9,21 +9,19 @@
 
 <style>
 :root { --gold: linear-gradient(135deg,#ffcc00,#ff9f00);}
-*{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);overflow-x:hidden;}
+*{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;}
+html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);}
 header{text-align:center;padding:20px 15px 10px;}
-.header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,0.3);}
-.small{font-size:14px;opacity:0.7;margin-top:8px;}
+.header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,.3);}
+.small{font-size:14px;opacity:.7;margin-top:8px;}
 .container{padding:15px;padding-bottom:120px;}
-.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,0.12);}
-.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;cursor:pointer;background:var(--gold);}
+.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,.12);}
+.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;background:var(--gold);}
 .section{display:none;}
 .section.active{display:block;}
-nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:#fff;border-radius:22px;display:flex;padding:6px;z-index:999;}
+nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:#fff;border-radius:22px;display:flex;padding:6px;}
 nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;}
 nav button.active{background:var(--gold);}
-.bone{position:fixed;font-size:28px;pointer-events:none;animation:fly 0.8s ease forwards;}
-@keyframes fly{to{opacity:0;transform:translateY(-60px) scale(1.6);}}
 .profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
 </style>
 </head>
@@ -37,6 +35,7 @@ nav button.active{background:var(--gold);}
 
 <div class="container">
 
+<!-- ЗАРАБОТОК -->
 <div id="earn" class="section active">
   <div class="card">
     <h2>🐾 Клики</h2>
@@ -48,7 +47,7 @@ nav button.active{background:var(--gold);}
   <div class="card">
     <h2>📋 Задания</h2>
     <p>Выполняй задания и зарабатывай</p>
-    <button class="btn">Перейти к заданиям</button>
+    <button class="btn" id="openTasks">Перейти к заданиям</button>
   </div>
 
   <div class="card">
@@ -58,6 +57,7 @@ nav button.active{background:var(--gold);}
   </div>
 </div>
 
+<!-- ПРОФИЛЬ -->
 <div id="profile" class="section">
   <div class="card">
     <img id="profilePhoto" class="profile-photo">
@@ -68,11 +68,12 @@ nav button.active{background:var(--gold);}
   </div>
 </div>
 
+<!-- ИНФО -->
 <div id="info" class="section">
   <div class="card">
     <h2>📰 Новостной канал</h2>
     <p>Все обновления и новости проекта.</p>
-    <button class="btn">Перейти в канал</button>
+    <button class="btn" onclick="tg.openTelegramLink('https://t.me/')">Перейти в канал</button>
   </div>
 
   <div class="card">
@@ -94,6 +95,9 @@ nav button.active{background:var(--gold);}
   </div>
 </div>
 
+<!-- ЗАДАНИЯ -->
+<div id="tasks" class="section"></div>
+
 </div>
 
 <nav>
@@ -104,7 +108,7 @@ nav button.active{background:var(--gold);}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
@@ -113,46 +117,90 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-const tg = window.Telegram.WebApp;
+window.tg = Telegram.WebApp;
 tg.ready();
 
 const user = tg.initDataUnsafe.user;
 const userId = user.id;
-let clicks = 0;
+const start = tg.initDataUnsafe.start_param;
+
+let data = {clicks:0,balance:0};
 
 const ref = doc(db,"users",String(userId));
 const snap = await getDoc(ref);
 
 if(!snap.exists()){
-  await setDoc(ref,{username:user.username,photo:user.photo_url,clicks:0,balance:0});
+  await setDoc(ref,{
+    username:user.username,
+    photo:user.photo_url,
+    clicks:0,
+    balance:0,
+    referrals:[],
+    completedTasks:[]
+  });
+
+  if(start && start !== String(userId)){
+    await updateDoc(doc(db,"users",start),{
+      referrals: arrayUnion(userId),
+      balance: increment(10)
+    });
+  }
 }else{
-  clicks = snap.data().clicks;
+  data = snap.data();
 }
 
-clicksRender();
+render();
 
 document.getElementById("clickBtn").onclick = async ()=>{
-  clicks++;
-  await updateDoc(ref,{clicks});
-  clicksRender();
+  data.clicks++;
+  data.balance++;
+  await updateDoc(ref,{clicks:data.clicks,balance:data.balance});
+  render();
 };
 
-function clicksRender(){
-  clicksEl("clicks","Кликов: "+clicks);
-  clicksEl("profileClicks",clicks);
+document.getElementById("openTasks").onclick = async ()=>{
+  openSection("tasks");
+  const tasksDiv = document.getElementById("tasks");
+  tasksDiv.innerHTML = "";
+  const snap = await getDocs(collection(db,"tasks"));
+  snap.forEach(t=>{
+    if(data.completedTasks?.includes(t.id)) return;
+    const d = t.data();
+    tasksDiv.innerHTML += `
+      <div class="card">
+        <h2>${d.title}</h2>
+        <p>Награда: ${d.reward} 🪙</p>
+        <button class="btn" onclick="completeTask('${t.id}',${d.reward},'${d.link}')">Выполнить</button>
+      </div>`;
+  });
+};
+
+window.completeTask = async (id,reward,link)=>{
+  tg.openTelegramLink(link);
+  data.balance+=reward;
+  data.completedTasks.push(id);
+  await updateDoc(ref,{
+    balance:increment(reward),
+    completedTasks:arrayUnion(id)
+  });
+  openSection("earn");
+  render();
+};
+
+function render(){
+  document.getElementById("clicks").innerText="Кликов: "+data.clicks;
+  document.getElementById("profileClicks").innerText=data.clicks;
+  document.getElementById("profileBalance").innerText=data.balance+" 🪙";
   document.getElementById("profileUsername").innerText="@"+user.username;
   document.getElementById("profileId").innerText=userId;
   document.getElementById("profilePhoto").src=user.photo_url;
   document.getElementById("personalLinkBtn").innerText="Персональная ссылка: @dogeasymoneybot?start="+userId;
+  if(userId===7020322752) document.getElementById("adminCard").style.display="block";
 }
 
-function clicksEl(id,val){document.getElementById(id).innerText=val;}
-
-window.openSection=(id)=>{
- document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- if(id==="info" && userId===7020322752)
-  document.getElementById("adminCard").style.display="block";
+window.openSection = id=>{
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 };
 </script>
 
