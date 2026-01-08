@@ -5,28 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Dog Money 🐶</title>
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
-    authDomain: "dogsmoney.firebaseapp.com",
-    projectId: "dogsmoney",
-    storageBucket: "dogsmoney.firebasestorage.app",
-    messagingSenderId: "339745413806",
-    appId: "1:339745413806:web:08f8fdd856ee92a3002b3f"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // Экспорт для использования в основном коде
-  window.firebaseDb = db;
-  window.firebaseFuncs = { doc, getDoc, setDoc, updateDoc, collection, getDocs };
-</script>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -37,18 +15,15 @@ header{text-align:center;padding:20px 15px 10px;}
 .header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,0.3);}
 .small{font-size:14px;opacity:0.7;margin-top:8px;}
 .container{padding:15px;padding-bottom:120px;}
-.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,0.12);animation:fadeUp 0.25s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;cursor:pointer;background:var(--gold);box-shadow:0 8px 20px rgba(255,170,0,0.6);transition:0.2s;}
-.btn:active{transform:scale(0.95);}
-.section{display:none;animation:slide 0.25s ease;}
+.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,0.12);}
+.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;cursor:pointer;background:var(--gold);}
+.section{display:none;}
 .section.active{display:block;}
-@keyframes slide{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
-nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-radius:22px;display:flex;padding:6px;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
-nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;cursor:pointer;}
-nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.7);}
-.bone{position:fixed;font-size:28px;pointer-events:none;animation:boneFly 0.8s ease forwards;z-index:1000;}
-@keyframes boneFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
+nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:#fff;border-radius:22px;display:flex;padding:6px;z-index:999;}
+nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;}
+nav button.active{background:var(--gold);}
+.bone{position:fixed;font-size:28px;pointer-events:none;animation:fly 0.8s ease forwards;}
+@keyframes fly{to{opacity:0;transform:translateY(-60px) scale(1.6);}}
 .profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
 </style>
 </head>
@@ -56,13 +31,12 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
 <body>
 
 <header>
-  <img class="header-img" src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg" alt="Dog Money">
+  <img class="header-img" src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg">
   <div class="small">Зарабатывай с собачками 🐶</div>
 </header>
 
 <div class="container">
 
-<!-- ЗАРАБОТОК -->
 <div id="earn" class="section active">
   <div class="card">
     <h2>🐾 Клики</h2>
@@ -70,11 +44,13 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
     <button class="btn" id="clickBtn">Кликнуть 🐕</button>
     <p id="clicks">Кликов: 0</p>
   </div>
+
   <div class="card">
     <h2>📋 Задания</h2>
     <p>Выполняй задания и зарабатывай</p>
     <button class="btn">Перейти к заданиям</button>
   </div>
+
   <div class="card">
     <h2>🤝 Рефералы</h2>
     <p>Приглашай друзей и получай бонус</p>
@@ -82,10 +58,9 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
   </div>
 </div>
 
-<!-- ПРОФИЛЬ -->
 <div id="profile" class="section">
-  <div class="card" id="profileCard">
-    <img src="" alt="Фото" class="profile-photo" id="profilePhoto">
+  <div class="card">
+    <img id="profilePhoto" class="profile-photo">
     <h2 id="profileUsername">—</h2>
     <p>ID: <span id="profileId">—</span></p>
     <p>Баланс: <b id="profileBalance">0 🪙</b></p>
@@ -93,7 +68,6 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
   </div>
 </div>
 
-<!-- ИНФО -->
 <div id="info" class="section">
   <div class="card">
     <h2>📰 Новостной канал</h2>
@@ -117,96 +91,69 @@ nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.
     <p><b>1.</b> Перейди в «Заработать»</p>
     <p><b>2.</b> Кликай, выполняй задания</p>
     <p><b>3.</b> Зови друзей</p>
-    <p><b>4.</b> Следи за балансом</p>
   </div>
 </div>
 
 </div>
 
 <nav>
-  <button id="btn-earn" class="active" onclick="openSection('earn')">💰 Заработать</button>
-  <button id="btn-profile" onclick="openSection('profile')">👤 Профиль</button>
-  <button id="btn-info" onclick="openSection('info')">ℹ️ Инфо</button>
+  <button id="btn-earn" class="active" onclick="openSection('earn')">Заработать</button>
+  <button id="btn-profile" onclick="openSection('profile')">Профиль</button>
+  <button id="btn-info" onclick="openSection('info')">Инфо</button>
 </nav>
 
 <script type="module">
-import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-
-  const db = window.firebaseDb;
-  const { doc: Doc, getDoc: GetDoc, setDoc: SetDoc, updateDoc: UpdateDoc } = window.firebaseFuncs;
-
-  let clicks = 0;
-  let userId = tg.initDataUnsafe?.user?.id || 0;
-  let username = tg.initDataUnsafe?.user?.username || "без username";
-  let photo_url = tg.initDataUnsafe?.user?.photo_url || "";
-
-  const userDocRef = Doc(db, "users", String(userId));
-
-  // Инициализация пользователя
-  const docSnap = await GetDoc(userDocRef);
-  if(!docSnap.exists()){
-    await SetDoc(userDocRef,{
-      username,
-      photo_url,
-      balance: 0,
-      clicks: 0,
-      referrals: []
-    });
-  } else {
-    const data = docSnap.data();
-    clicks = data.clicks || 0;
-    document.getElementById("profileBalance").innerText = data.balance + " 🪙";
-    document.getElementById("profileClicks").innerText = data.clicks;
-  }
-
-  document.getElementById("profileUsername").innerText = "@" + username;
-  document.getElementById("profileId").innerText = userId;
-  document.getElementById("profilePhoto").src = photo_url;
-  document.getElementById("personalLinkBtn").innerText = "Персональная ссылка: @dogeasymoneybot?start=" + userId;
-
-  // Клик
-  document.getElementById("clickBtn").addEventListener("click", async ()=>{
-    clicks++;
-    document.getElementById("clicks").innerText = "Кликов: " + clicks;
-    document.getElementById("profileClicks").innerText = clicks;
-    await UpdateDoc(userDocRef,{ clicks });
-    tg.HapticFeedback.impactOccurred("medium");
-  });
-
-  // Навигация и админка
-  window.openSection = function(id){
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.getElementById('btn-'+id).classList.add('active');
-    tg.HapticFeedback.impactOccurred("light");
-    if(id==="info" && userId===7020322752){
-      document.getElementById("adminCard").style.display="block";
-    }
-  };
-
-  // Админка
-  document.getElementById("openAdmin").addEventListener("click", async ()=>{
-    alert("Админка открыта (тут можно реализовать функции просмотра пользователей и редактирования баланса)");
-  });
-
-  // Косточка при тапе
-  document.addEventListener("touchstart", e=>spawnBone(e.touches[0].clientX,e.touches[0].clientY));
-  document.addEventListener("click", e=>spawnBone(e.clientX,e.clientY));
-  function spawnBone(x,y){
-    const bone=document.createElement("div");
-    bone.className="bone";
-    bone.innerText="🦴";
-    bone.style.left=(x-12)+"px";
-    bone.style.top=(y-20)+"px";
-    document.body.appendChild(bone);
-    setTimeout(()=>bone.remove(),800);
-  }
+const app = initializeApp({
+  apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
+  authDomain: "dogsmoney.firebaseapp.com",
+  projectId: "dogsmoney"
 });
+const db = getFirestore(app);
+
+const tg = window.Telegram.WebApp;
+tg.ready();
+
+const user = tg.initDataUnsafe.user;
+const userId = user.id;
+let clicks = 0;
+
+const ref = doc(db,"users",String(userId));
+const snap = await getDoc(ref);
+
+if(!snap.exists()){
+  await setDoc(ref,{username:user.username,photo:user.photo_url,clicks:0,balance:0});
+}else{
+  clicks = snap.data().clicks;
+}
+
+clicksRender();
+
+document.getElementById("clickBtn").onclick = async ()=>{
+  clicks++;
+  await updateDoc(ref,{clicks});
+  clicksRender();
+};
+
+function clicksRender(){
+  clicksEl("clicks","Кликов: "+clicks);
+  clicksEl("profileClicks",clicks);
+  document.getElementById("profileUsername").innerText="@"+user.username;
+  document.getElementById("profileId").innerText=userId;
+  document.getElementById("profilePhoto").src=user.photo_url;
+  document.getElementById("personalLinkBtn").innerText="Персональная ссылка: @dogeasymoneybot?start="+userId;
+}
+
+function clicksEl(id,val){document.getElementById(id).innerText=val;}
+
+window.openSection=(id)=>{
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ if(id==="info" && userId===7020322752)
+  document.getElementById("adminCard").style.display="block";
+};
 </script>
 
 </body>
