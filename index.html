@@ -10,7 +10,7 @@
 <style>
 :root { --gold: linear-gradient(135deg,#ffcc00,#ff9f00);}
 *{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;}
-html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);}
+html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);overflow-x:hidden;}
 header{text-align:center;padding:20px 15px 10px;}
 .header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,.3);}
 .small{font-size:14px;opacity:.7;margin-top:8px;}
@@ -23,6 +23,8 @@ nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:#fff;
 nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;}
 nav button.active{background:var(--gold);}
 .profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
+.bone{position:fixed;font-size:28px;pointer-events:none;animation:boneFly 0.8s ease forwards;z-index:1000;}
+@keyframes boneFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
 </style>
 </head>
 
@@ -43,17 +45,33 @@ nav button.active{background:var(--gold);}
     <button class="btn" id="clickBtn">Кликнуть 🐕</button>
     <p id="clicks">Кликов: 0</p>
   </div>
-
   <div class="card">
     <h2>📋 Задания</h2>
     <p>Выполняй задания и зарабатывай</p>
-    <button class="btn" id="openTasks">Перейти к заданиям</button>
+    <button class="btn" onclick="openSection('tasks')">Перейти к заданиям</button>
   </div>
-
   <div class="card">
     <h2>🤝 Рефералы</h2>
     <p>Приглашай друзей и получай бонус</p>
-    <button class="btn" id="personalLinkBtn">Моя ссылка</button>
+    <button class="btn" onclick="openSection('referrals')">Перейти к рефералам</button>
+  </div>
+</div>
+
+<!-- ЗАДАНИЯ -->
+<div id="tasks" class="section">
+  <div class="card">
+    <h2>Задания</h2>
+    <p>Выполняй задания и зарабатывай монеты</p>
+    <div id="taskList"></div>
+  </div>
+</div>
+
+<!-- РЕФЕРАЛЫ -->
+<div id="referrals" class="section">
+  <div class="card">
+    <h2>Мои рефералы</h2>
+    <p>Приглашённые вами пользователи:</p>
+    <div id="referralList"></div>
   </div>
 </div>
 
@@ -75,7 +93,6 @@ nav button.active{background:var(--gold);}
     <p>Все обновления и новости проекта.</p>
     <button class="btn" onclick="tg.openTelegramLink('https://t.me/')">Перейти в канал</button>
   </div>
-
   <div class="card">
     <h2>🛠 Поддержка</h2>
     <p><b>@support_dogmoney</b></p>
@@ -84,7 +101,7 @@ nav button.active{background:var(--gold);}
   <div class="card" id="adminCard" style="display:none;">
     <h2>🛡 Админка</h2>
     <p>Только для админа</p>
-    <button class="btn" id="openAdmin">Перейти</button>
+    <button class="btn" id="openAdmin">Добавить/Удалить задание</button>
   </div>
 
   <div class="card">
@@ -94,9 +111,6 @@ nav button.active{background:var(--gold);}
     <p><b>3.</b> Зови друзей</p>
   </div>
 </div>
-
-<!-- ЗАДАНИЯ -->
-<div id="tasks" class="section"></div>
 
 </div>
 
@@ -124,7 +138,7 @@ const user = tg.initDataUnsafe.user;
 const userId = user.id;
 const start = tg.initDataUnsafe.start_param;
 
-let data = {clicks:0,balance:0};
+let data = {clicks:0,balance:0,referrals:[],completedTasks:[]};
 
 const ref = doc(db,"users",String(userId));
 const snap = await getDoc(ref);
@@ -158,51 +172,12 @@ document.getElementById("clickBtn").onclick = async ()=>{
   render();
 };
 
-document.getElementById("openTasks").onclick = async ()=>{
-  openSection("tasks");
-  const tasksDiv = document.getElementById("tasks");
-  tasksDiv.innerHTML = "";
-  const snap = await getDocs(collection(db,"tasks"));
-  snap.forEach(t=>{
-    if(data.completedTasks?.includes(t.id)) return;
-    const d = t.data();
-    tasksDiv.innerHTML += `
-      <div class="card">
-        <h2>${d.title}</h2>
-        <p>Награда: ${d.reward} 🪙</p>
-        <button class="btn" onclick="completeTask('${t.id}',${d.reward},'${d.link}')">Выполнить</button>
-      </div>`;
-  });
-};
-
-window.completeTask = async (id,reward,link)=>{
-  tg.openTelegramLink(link);
-  data.balance+=reward;
-  data.completedTasks.push(id);
-  await updateDoc(ref,{
-    balance:increment(reward),
-    completedTasks:arrayUnion(id)
-  });
-  openSection("earn");
-  render();
-};
-
-function render(){
-  document.getElementById("clicks").innerText="Кликов: "+data.clicks;
-  document.getElementById("profileClicks").innerText=data.clicks;
-  document.getElementById("profileBalance").innerText=data.balance+" 🪙";
-  document.getElementById("profileUsername").innerText="@"+user.username;
-  document.getElementById("profileId").innerText=userId;
-  document.getElementById("profilePhoto").src=user.photo_url;
-  document.getElementById("personalLinkBtn").innerText="Персональная ссылка: @dogeasymoneybot?start="+userId;
-  if(userId===7020322752) document.getElementById("adminCard").style.display="block";
-}
-
 window.openSection = id=>{
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 };
-</script>
 
-</body>
-</html>
+async function render() {
+  document.getElementById("clicks").innerText = "Кликов: " + data.clicks;
+  document.getElementById("profileClicks").innerText = data.clicks;
+  document.getElementById("profileBalance").innerText = data.balance
