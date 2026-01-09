@@ -180,4 +180,47 @@ window.openSection = id=>{
 async function render() {
   document.getElementById("clicks").innerText = "Кликов: " + data.clicks;
   document.getElementById("profileClicks").innerText = data.clicks;
-  document.getElementById("profileBalance").innerText = data.balance
+  document.getElementById("profileBalance").innerText = data.balance + " 🪙";
+  document.getElementById("profileUsername").innerText = "@" + user.username;
+  document.getElementById("profileId").innerText = userId;
+  document.getElementById("profilePhoto").src = user.photo document.getElementById("profilePhoto").src = user.photo_url;
+
+// Отображаем рефералов
+document.getElementById("referralList").innerHTML = data.referrals.map(id => `
+  <div>Реферал: @${id}</div>
+`).join("");
+
+// Задания
+document.getElementById("taskList").innerHTML = data.completedTasks.length > 0 ? 
+  data.completedTasks.map(task => `
+    <div>Задание: ${task} - Выполнено</div>
+  `).join("") : `<div>Нет выполненных заданий</div>`;
+
+document.getElementById("btn-earn").onclick = () => openSection('earn');
+document.getElementById("btn-profile").onclick = () => openSection('profile');
+document.getElementById("btn-info").onclick = () => openSection('info');
+
+// Косточки
+document.addEventListener("click", function(e) {
+  const bone = document.createElement("div");
+  bone.className = "bone";
+  bone.innerText = "🦴";
+  bone.style.left = `${e.clientX - 12}px`;
+  bone.style.top = `${e.clientY - 20}px`;
+  document.body.appendChild(bone);
+  setTimeout(() => bone.remove(), 800);
+});
+
+// Функции для админки
+document.getElementById("openAdmin").addEventListener("click", async () => {
+  const newTask = prompt("Введите название нового задания:");
+  if (newTask) {
+    data.completedTasks.push(newTask);
+    await updateDoc(ref, { completedTasks: data.completedTasks });
+    render();
+  }
+});
+
+</script>
+</body>
+</html>
