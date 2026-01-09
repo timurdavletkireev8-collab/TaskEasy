@@ -2,225 +2,261 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dog Money 🐶</title>
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
 :root { --gold: linear-gradient(135deg,#ffcc00,#ff9f00);}
-*{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;}
+*{box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 html,body{margin:0;padding:0;height:100%;background:radial-gradient(circle at top,#fff2d6,#ffd28a);overflow-x:hidden;}
-header{text-align:center;padding:20px 15px 10px;}
-.header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,.3);}
-.small{font-size:14px;opacity:.7;margin-top:8px;}
+header{text-align:center;padding:20px 15px;}
+.header-img{width:100%;max-width:340px;border-radius:22px;box-shadow:0 14px 35px rgba(0,0,0,0.3);}
+.small{font-size:14px;opacity:0.7;margin-top:8px;}
 .container{padding:15px;padding-bottom:120px;}
-.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,.12);}
-.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;background:var(--gold);}
+.card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 15px 35px rgba(0,0,0,0.12);}
+.btn{width:100%;padding:14px;border:none;border-radius:18px;font-size:16px;font-weight:600;cursor:pointer;background:var(--gold);box-shadow:0 8px 20px rgba(255,170,0,0.6);}
+.btn:active{transform:scale(0.95);}
 .section{display:none;}
 .section.active{display:block;}
-nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:#fff;border-radius:22px;display:flex;padding:6px;}
-nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;}
-nav button.active{background:var(--gold);}
-.profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
+nav{position:fixed;bottom:12px;left:12px;right:12px;height:64px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-radius:22px;display:flex;padding:6px;z-index:999;box-shadow:0 10px 30px rgba(0,0,0,0.25);}
+nav button{flex:1;border:none;background:none;border-radius:16px;font-size:13px;font-weight:600;cursor:pointer;}
+nav button.active{background:var(--gold);box-shadow:0 6px 18px rgba(255,170,0,0.7);}
 .bone{position:fixed;font-size:28px;pointer-events:none;animation:boneFly 0.8s ease forwards;z-index:1000;}
 @keyframes boneFly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
+.profile-photo{width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:none;z-index:10000;color:#fff;overflow:auto;padding:20px;}
+#overlay h2{margin-top:0;}
+#overlay .closeBtn{position:absolute;top:12px;right:12px;background:#ff9f00;color:#fff;border:none;padding:10px 16px;border-radius:12px;font-weight:600;cursor:pointer;}
+#adminTable { width: 100%; border-collapse: collapse; margin-top: 15px; background: #222; border-radius: 12px; overflow: hidden; }
+#adminTable th, #adminTable td { padding: 10px; border: 1px solid #333; text-align: left; font-size: 13px; }
+#adminTable input { width: 60px; background: #444; color: #fff; border: none; border-radius: 4px; padding: 4px; }
+.save-mini-btn { padding: 6px; font-size: 12px; background: var(--gold); border: none; border-radius: 8px; cursor: pointer; color: #000; font-weight: bold; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
 <header>
-  <img class="header-img" src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg">
+  <img class="header-img" src="https://i.postimg.cc/nrrTt15j/Giga-Chat-36.jpg" alt="Dog Money">
   <div class="small">Зарабатывай с собачками 🐶</div>
 </header>
 
 <div class="container">
-
-<!-- ЗАРАБОТОК -->
-<div id="earn" class="section active">
-  <div class="card">
-    <h2>🐾 Клики</h2>
-    <p>Жми и получай монеты</p>
-    <button class="btn" id="clickBtn">Кликнуть 🐕</button>
-    <p id="clicks">Кликов: 0</p>
-  </div>
-  <div class="card">
-    <h2>📋 Задания</h2>
-    <p>Выполняй задания и зарабатывай</p>
-    <button class="btn" onclick="openSection('tasks')">Перейти к заданиям</button>
-  </div>
-  <div class="card">
-    <h2>🤝 Рефералы</h2>
-    <p>Приглашай друзей и получай бонус</p>
-    <button class="btn" onclick="openSection('referrals')">Перейти к рефералам</button>
-  </div>
-</div>
-
-<!-- ЗАДАНИЯ -->
-<div id="tasks" class="section">
-  <div class="card">
-    <h2>Задания</h2>
-    <p>Выполняй задания и зарабатывай монеты</p>
-    <div id="taskList"></div>
-  </div>
-</div>
-
-<!-- РЕФЕРАЛЫ -->
-<div id="referrals" class="section">
-  <div class="card">
-    <h2>Мои рефералы</h2>
-    <p>Приглашённые вами пользователи:</p>
-    <div id="referralList"></div>
-  </div>
-</div>
-
-<!-- ПРОФИЛЬ -->
-<div id="profile" class="section">
-  <div class="card">
-    <img id="profilePhoto" class="profile-photo">
-    <h2 id="profileUsername">—</h2>
-    <p>ID: <span id="profileId">—</span></p>
-    <p>Баланс: <b id="profileBalance">0 🪙</b></p>
-    <p>Клики: <span id="profileClicks">0</span></p>
-  </div>
-</div>
-
-<!-- ИНФО -->
-<div id="info" class="section">
-  <div class="card">
-    <h2>📰 Новостной канал</h2>
-    <p>Все обновления и новости проекта.</p>
-    <button class="btn" onclick="tg.openTelegramLink('https://t.me/')">Перейти в канал</button>
-  </div>
-  <div class="card">
-    <h2>🛠 Поддержка</h2>
-    <p><b>@support_dogmoney</b></p>
+  <div id="earn" class="section active">
+    <div class="card">
+      <h2>🐾 Клики</h2>
+      <p>Жми и получай монеты</p>
+      <button class="btn actionBtn" data-type="click">Кликнуть 🐕</button>
+      <p id="clicks">Кликов: 0</p>
+    </div>
+    <div class="card">
+      <h2>📋 Задания</h2>
+      <p>Выполняй задания и зарабатывай</p>
+      <button class="btn actionBtn" data-type="tasks">Перейти к заданиям</button>
+    </div>
+    <div class="card">
+      <h2>🤝 Рефералы</h2>
+      <p>Приглашай друзей и получай бонус</p>
+      <button class="btn actionBtn" data-type="referrals">Перейти</button>
+    </div>
   </div>
 
-  <div class="card" id="adminCard" style="display:none;">
-    <h2>🛡 Админка</h2>
-    <p>Только для админа</p>
-    <button class="btn" id="openAdmin">Добавить/Удалить задание</button>
+  <div id="profile" class="section">
+    <div class="card" id="profileCard">
+      <img src="" alt="Фото" class="profile-photo" id="profilePhoto">
+      <h2 id="profileUsername">—</h2>
+      <p>ID: <span id="profileId">—</span></p>
+      <p>Баланс: <b id="profileBalance">0 🪙</b></p>
+      <p>Клики: <span id="profileClicks">0</span></p>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>📘 Руководство</h2>
-    <p><b>1.</b> Перейди в «Заработать»</p>
-    <p><b>2.</b> Кликай, выполняй задания</p>
-    <p><b>3.</b> Зови друзей</p>
-  </div>
-</div>
+  <div id="info" class="section">
+    <div class="card">
+      <h2>📰 Новостной канал</h2>
+      <p>Все обновления и новости проекта.</p>
+      <button class="btn">Перейти в канал</button>
+    </div>
+    <div class="card">
+      <h2>🛠 Поддержка</h2>
+      <p><b>@support_dogmoney</b></p>
+    </div>
 
+    <div class="card" id="adminCard">
+      <h2>🛡 Админка</h2>
+      <p>Управление базой данных</p>
+      <button class="btn" id="openAdmin">Открыть управление</button>
+    </div>
+
+    <div class="card">
+      <h2>📘 Руководство</h2>
+      <p><b>1.</b> Перейди в «Заработать»</p>
+      <p><b>2.</b> Кликай, выполняй задания</p>
+      <p><b>3.</b> Зови друзей</p>
+      <p><b>4.</b> Следи за балансом</p>
+    </div>
+  </div>
 </div>
 
 <nav>
-  <button id="btn-earn" class="active" onclick="openSection('earn')">Заработать</button>
-  <button id="btn-profile" onclick="openSection('profile')">Профиль</button>
-  <button id="btn-info" onclick="openSection('info')">Инфо</button>
+  <button id="btn-earn" class="active" onclick="openSection('earn')">💰 Заработать</button>
+  <button id="btn-profile" onclick="openSection('profile')">👤 Профиль</button>
+  <button id="btn-info" onclick="openSection('info')">ℹ️ Инфо</button>
 </nav>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.2.0/firebase-firestore.js";
+<div id="overlay">
+  <button class="closeBtn">Закрыть</button>
+  <div id="overlayContent"></div>
+</div>
 
-const app = initializeApp({
-  apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
-  authDomain: "dogsmoney.firebaseapp.com",
-  projectId: "dogsmoney"
-});
-const db = getFirestore(app);
-
-window.tg = Telegram.WebApp;
+<script>
+const tg = window.Telegram.WebApp;
 tg.ready();
 
-const user = tg.initDataUnsafe.user;
-const userId = user.id;
-const start = tg.initDataUnsafe.start_param;
+const firebaseConfig = {
+    apiKey: "AIzaSyDeY43dAjpJ2NxHneG4W66veHNBiQ5jhfA",
+    authDomain: "dogsmoney.firebaseapp.com",
+    projectId: "dogsmoney",
+    storageBucket: "dogsmoney.firebasestorage.app",
+    messagingSenderId: "339745413806",
+    appId: "1:339745413806:web:08f8fdd856ee92a3002b3f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-let data = {clicks:0,balance:0,referrals:[],completedTasks:[]};
+let clicks = 0;
+let balance = 0;
+let userRef;
+let userId = 0;
 
-const ref = doc(db,"users",String(userId));
-const snap = await getDoc(ref);
-
-if(!snap.exists()){
-  await setDoc(ref,{
-    username:user.username,
-    photo:user.photo_url,
-    clicks:0,
-    balance:0,
-    referrals:[],
-    completedTasks:[]
-  });
-
-  if(start && start !== String(userId)){
-    await updateDoc(doc(db,"users",start),{
-      referrals: arrayUnion(userId),
-      balance: increment(10)
-    });
-  }
-}else{
-  data = snap.data();
+function waitForUserData(callback){
+    let tries = 0;
+    const interval = setInterval(()=>{
+        if(tg.initDataUnsafe?.user){
+            clearInterval(interval);
+            callback(tg.initDataUnsafe.user);
+        } else if(tries>20){
+            clearInterval(interval);
+            callback({id: Date.now(), username: 'Guest'}); 
+        }
+        tries++;
+    },100);
 }
 
-render();
+waitForUserData(user=>{
+    userId = user.id;
+    const username = user.username || "user";
+    const photo_url = user.photo_url || "";
 
-document.getElementById("clickBtn").onclick = async ()=>{
-  data.clicks++;
-  data.balance++;
-  await updateDoc(ref,{clicks:data.clicks,balance:data.balance});
-  render();
-};
+    document.getElementById("profileUsername").innerText = "@"+username;
+    document.getElementById("profileId").innerText = userId;
+    if(photo_url) document.getElementById("profilePhoto").src = photo_url;
 
-window.openSection = id=>{
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-};
+    userRef = db.collection("users").doc(String(userId));
 
-async function render() {
-  document.getElementById("clicks").innerText = "Кликов: " + data.clicks;
-  document.getElementById("profileClicks").innerText = data.clicks;
-  document.getElementById("profileBalance").innerText = data.balance + " 🪙";
-  document.getElementById("profileUsername").innerText = "@" + user.username;
-  document.getElementById("profileId").innerText = userId;
-  document.getElementById("profilePhoto").src = user.photo document.getElementById("profilePhoto").src = user.photo_url;
-
-// Отображаем рефералов
-document.getElementById("referralList").innerHTML = data.referrals.map(id => `
-  <div>Реферал: @${id}</div>
-`).join("");
-
-// Задания
-document.getElementById("taskList").innerHTML = data.completedTasks.length > 0 ? 
-  data.completedTasks.map(task => `
-    <div>Задание: ${task} - Выполнено</div>
-  `).join("") : `<div>Нет выполненных заданий</div>`;
-
-document.getElementById("btn-earn").onclick = () => openSection('earn');
-document.getElementById("btn-profile").onclick = () => openSection('profile');
-document.getElementById("btn-info").onclick = () => openSection('info');
-
-// Косточки
-document.addEventListener("click", function(e) {
-  const bone = document.createElement("div");
-  bone.className = "bone";
-  bone.innerText = "🦴";
-  bone.style.left = `${e.clientX - 12}px`;
-  bone.style.top = `${e.clientY - 20}px`;
-  document.body.appendChild(bone);
-  setTimeout(() => bone.remove(), 800);
+    userRef.get().then(docSnap=>{
+        if(!docSnap.exists){
+            userRef.set({username, photo_url, balance:0, clicks:0, referrals:[]});
+        } else {
+            const data = docSnap.data();
+            clicks = data.clicks || 0;
+            balance = data.balance || 0;
+            updateUI();
+        }
+    });
 });
 
-// Функции для админки
-document.getElementById("openAdmin").addEventListener("click", async () => {
-  const newTask = prompt("Введите название нового задания:");
-  if (newTask) {
-    data.completedTasks.push(newTask);
-    await updateDoc(ref, { completedTasks: data.completedTasks });
-    render();
-  }
+function updateUI() {
+    document.getElementById("profileBalance").innerText = balance+" 🪙";
+    document.getElementById("profileClicks").innerText = clicks;
+    document.getElementById("clicks").innerText = "Кликов: "+clicks;
+}
+
+document.querySelectorAll(".actionBtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>openOverlay(btn.dataset.type));
 });
 
+function openOverlay(type){
+    const overlay = document.getElementById("overlay");
+    const content = document.getElementById("overlayContent");
+    overlay.style.display="block";
+
+    if(type==="click"){
+        content.innerHTML = `<h2>🐾 Клики</h2><p>Жми и получай монеты!</p>
+        <button class="btn" id="clickOverlayBtn">Кликнуть 🐕</button>
+        <p id="clickOverlayCount">Кликов: ${clicks}</p>`;
+        document.getElementById("clickOverlayBtn").addEventListener("click", ()=>{
+            clicks++;
+            document.getElementById("clickOverlayCount").innerText = "Кликов: "+clicks;
+            updateUI();
+            userRef.update({clicks});
+            tg.HapticFeedback.impactOccurred("medium");
+        });
+    } else if(type==="tasks"){
+        content.innerHTML = `<h2>📋 Задания</h2><p>Здесь будут задания для заработка.</p>`;
+    } else if(type==="referrals"){
+        content.innerHTML = `<h2>🤝 Рефералы</h2><p>Приглашай друзей и получай бонус!</p>`;
+    }
+}
+
+document.querySelector("#overlay .closeBtn").addEventListener("click", ()=>{
+    document.getElementById("overlay").style.display="none";
+});
+
+function openSection(id){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.getElementById("btn-"+id).classList.add("active");
+    tg.HapticFeedback.impactOccurred("light");
+}
+
+function spawnBone(x,y){
+    const bone=document.createElement("div");
+    bone.className="bone";
+    bone.innerText="🦴";
+    bone.style.left=(x-12)+"px";
+    bone.style.top=(y-20)+"px";
+    document.body.appendChild(bone);
+    setTimeout(()=>bone.remove(),800);
+}
+document.addEventListener("click", e=>spawnBone(e.clientX,e.clientY));
+
+// АДМИНКА
+document.getElementById("openAdmin").addEventListener("click", async ()=>{
+    const overlay = document.getElementById("overlay");
+    overlay.style.display="block";
+    const content = document.getElementById("overlayContent");
+    content.innerHTML = `<h2>🛡 База пользователей</h2><div style="overflow-x:auto;"><table id="adminTable"><tr><th>User</th><th>Бал</th><th>Клик</th><th>Ок</th></tr></table></div>`;
+
+    const usersSnap = await db.collection("users").get();
+    const table = document.getElementById("adminTable");
+    usersSnap.forEach(doc=>{
+        const data = doc.data();
+        const row = table.insertRow();
+        row.insertCell(0).innerText = data.username || doc.id.substring(0,5);
+        
+        const balCell = row.insertCell(1);
+        const balInput = document.createElement("input"); balInput.type="number"; balInput.value=data.balance||0; balCell.appendChild(balInput);
+        
+        const clicksCell = row.insertCell(2);
+        const clicksInput = document.createElement("input"); clicksInput.type="number"; clicksInput.value=data.clicks||0; clicksCell.appendChild(clicksInput);
+        
+        const saveCell = row.insertCell(3);
+        const saveBtn = document.createElement("button");
+        saveBtn.innerText="💾";
+        saveBtn.className="save-mini-btn";
+        saveBtn.onclick = () => {
+            db.collection("users").doc(doc.id).update({
+                balance: parseInt(balInput.value),
+                clicks: parseInt(clicksInput.value)
+            });
+            tg.showPopup({message: "Готово!"});
+        };
+        saveCell.appendChild(saveBtn);
+    });
+});
 </script>
 </body>
 </html>
